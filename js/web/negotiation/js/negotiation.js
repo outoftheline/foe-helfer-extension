@@ -463,6 +463,14 @@ let Negotiation = {
 	 * @param {number} [forcedTryCount]
 	 */
 	StartNegotiation: (responseData, forcedTryCount) => {
+		if (responseData.context === 'guildBattleground') {
+			if (! $('#negotiation-Btn').hasClass('hud-btn-red')) {
+				$('#negotiation-Btn').addClass('hud-btn-red');
+				_menu.toolTippBox(i18n('Menu.Negotiation.Title'), '<em id="negotiation-Btn-closed" class="tooltip-error">' + i18n('Menu.Negotiation.Warning') + '<br></em>' + i18n('Menu.Negotiation.Desc'), 'negotiation-Btn');
+			}
+			return; //No Negotiation helper for GBG
+		}
+
 		Negotiation.StartNegotiationBackupData = responseData;
 
 		if (responseData.__class__ === "Error") return;
