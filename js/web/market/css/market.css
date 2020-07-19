@@ -1,0 +1,57 @@
+/*
+ * **************************************************************************************
+ *
+ * Dateiname:                 market.css
+ * Projekt:                   foe-chrome
+ *
+ * erstellt von:              Daniel Siekiera <daniel.siekiera@gmail.com>
+ * erstellt am:	              17.07.20, 23:50 Uhr
+ * zuletzt bearbeitet:       17.07.20, 23:50 Uhr
+ *
+ * Copyright © 2020
+ *
+ * **************************************************************************************
+ */
+
+#Market {
+    top: 100px;
+    right: 100px;
+    width: 600px;
+}
+
+#Market #MarketBody {
+    overflow-y: auto;
+    max-height: 750px;
+}
+
+#Market #MarketBody td {
+    position: relative;
+    font-size: 85%;
+    vertical-align: middle;
+}
+
+#Market #MarketBody .filters th {
+    text-align: center;
+}
+
+#Market #MarketBody .filters select {
+    width: 160px;
+}
+
+#Market #MarketBody td.goods-image { 
+	padding: 0;
+	background-color: var(--50-black);
+}
+
+#Market #MarketBody .goods-sprite-50.sm {
+	width: 25px;
+	height: 25px;
+	text-align: center;
+}
+
+#Market #MarketBody .goods-sprite-50.sm::before { 
+	zoom: 0.7; 
+	overflow: hidden;
+	position: static;
+	display: inline-block;
+}
