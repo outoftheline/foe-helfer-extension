@@ -1,3 +1,12 @@
+/*
+ * Messy code has these issues:
+ * - GvG Annotations do not work anymore
+ * - DatePicker does not display the selected values after clicking anything else
+ * - "today" is not displaying hourly
+ * - GBG does not work with the DatePicker
+ * - tbc. (didn't find more, but there will be)
+*/
+
 // Guild Battlegrounds leader board log
 FoEproxy.addHandler('GuildBattlegroundService', 'getPlayerLeaderboard', async (data, postData) => {
 	const r = data.responseData;
