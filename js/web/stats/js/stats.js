@@ -79,7 +79,7 @@ FoEproxy.addHandler('ResourceService', 'getPlayerResources', async (data, postDa
 		date: moment().startOf('day').toDate(),
 		resources: r.resources
 	});
-
+    // todo
 	await IndexDB.db.statsTreasurePlayerH.put({
 		date: moment().startOf('hour').toDate(),
 		resources: r.resources
@@ -100,7 +100,7 @@ FoEproxy.addHandler('ClanService', 'getTreasury', async (data, postData) => {
 		clanId: ExtGuildID,
 		resources: r.resources
 	});
-
+	// todo
 	await IndexDB.db.statsTreasureClanH.put({
 		date: moment().startOf('hour').toDate(),
 		clanId: ExtGuildID,
@@ -127,7 +127,7 @@ FoEproxy.addHandler('ArmyUnitManagementService', 'getArmyInfo', async (data, pos
 		date: moment().startOf('day').toDate(),
 		army
 	});
-
+	// todo
     await IndexDB.db.statsUnitsH.put({
 		date: moment().startOf('hour').toDate(),
 		army
@@ -199,21 +199,26 @@ let Stats = {
 
 	// State for UI
 	state: {
-		source: 'statsTreasurePlayerH', // Source of data - indexdb table name
+		source: 'statsTreasurePlayerD', // Source of data - indexdb table name
 		chartType: 'streamgraph', // chart type
 		eras: {}, // Selected era for filtering data,
 		eraSelectOpen: false, // Dropdown
 		isGroupByEra: false,
 		showAnnotations: false, // GvG annotations
-		period: 'today',
+		period: 'all',
 		rewardSource: 'guildExpedition', // filter by type of reward
 		currentType: null
 	},
 
 	DatePickerObj: null,
 
-	treasureSources: ['statsTreasurePlayerH', 'statsTreasurePlayerD', 'statsTreasureClanH', 'statsTreasureClanD'],
-	unitSources: ['statsUnitsH', 'statsUnitsD'],
+	timeSpan: {
+		start: moment().startOf('isoWeek').subtract(1, 'year').toDate(),
+		end: moment().toDate()
+	},
+
+	treasureSources: ['statsTreasurePlayerD', 'statsTreasureClanD'],
+	unitSources: ['statsUnitsD'],
 	rewardSources: ['statsRewards'],
 	gbgSources: ['statsGBGPlayers'],
 	isSelectedTreasureSources: () => Stats.treasureSources.includes(Stats.state.source),
@@ -282,8 +287,8 @@ let Stats = {
 
 				case 'selectSource':
 					const isChangedToUnit = Stats.unitSources.includes(value) && !Stats.isSelectedUnitSources();
-					const isChangedToMyTreasure = ['statsTreasurePlayerH', 'statsTreasurePlayerD'].includes(value) && !Stats.isSelectedTreasureSources();
-					const isChangedToClanTreasure = ['statsTreasureClanH', 'statsTreasureClanD'].includes(value) && !Stats.isSelectedTreasureSources();
+					const isChangedToMyTreasure = ['statsTreasurePlayerD'].includes(value) && !Stats.isSelectedTreasureSources();
+					const isChangedToClanTreasure = ['statsTreasureClanD'].includes(value) && !Stats.isSelectedTreasureSources();
 					const isChangedToReward = Stats.rewardSources.includes(value) && !Stats.isSelectedRewardSources();
 					const isChangedToGBG = Stats.gbgSources.includes(value) && !Stats.isSelectedGBGSources();
 
@@ -321,7 +326,7 @@ let Stats = {
 										Stats.state.rewardSource = 'guildExpedition';
 									}
 
-					Stats.state.source = value || 'statsTreasurePlayerH';
+					Stats.state.source = value || 'statsTreasurePlayerD';
 					break;
 
 				case 'setChartType':
@@ -330,6 +335,7 @@ let Stats = {
 
 				case 'setPeriod':
 					Stats.state.period = value;
+					Stats.setPredefinedTimeSpan(value);
 					break;
 
 				case 'setRewardSource':
@@ -365,7 +371,7 @@ let Stats = {
 	 * @returns {Promise<void>}
 	 */
 	Render: async () => {
-		$('#statsBody').html(`<div class="options">${Stats.RenderOptions()}</div><div class="options-2"></div><div id="highcharts">Loading...</div>`);
+		$('#statsBody').html(`<div class="options">${Stats.RenderOptions()}</div><div class="options-2">${Stats.RenderRewardOptions()}</div><div id="highcharts">Loading...</div>`);
 
 		Stats.updateOptions();
 		await Stats.loadHighcharts();
@@ -378,30 +384,37 @@ let Stats = {
 	 */
 	updateOptions: () => {
 		$('#statsBody .options').html(Stats.RenderOptions());
-		let secondaryOptions = Stats.isSelectedRewardSources() ? Stats.RenderSecondaryOptions() : '';
+		let dateOptions = Stats.RenderDateOptions();
+		let rewardOptions = Stats.isSelectedRewardSources() ? Stats.RenderRewardOptions() : '';
+		$('#statsBody .options-2').html(dateOptions + rewardOptions);
 
-		$('#statsBody .options-2').html(secondaryOptions).promise().done(function(){
-			/*
-			if ($('#GVGDatePicker').length > 0) {
-
+		$('#statsBody .options-2').promise().done(function(){
+			
+			if ($('#datePicker').length > 0) {
+				let datePickerEnabled = true;
 				Stats.DatePickerObj = new Litepicker({
-					element: document.getElementById('GVGDatePicker'),
+					element: document.getElementById('datePicker'),
 					format: i18n('Date'),
 					lang: MainParser.Language,
 					singleMode: false,
 					maxDate: MainParser.getCurrentDate(),
 					showWeekNumbers: true,
+					autoRefresh: true,
 					onSelect: async function (start, end) {
-						$('#GVGDatePicker').text(`${start} - ${end}`);
+						$('#datePicker').text(`${start} - ${end}`);
+						Stats.setTimeSpan(start, end);
+						console.log(Stats.timeSpan);
+						Stats.state.period = null;
+						$('.option-2-period .btn-tight').removeClass('btn-green');
 
-						return await Stats.updateCommonChart(Stats.applyDeltaToSeriesIfNeed(await Stats.createGBGSeries({ s: start, e: end })));
+						Stats.updateCharts(datePickerEnabled);
 					}
 				});
 			}
 			else {
 				Stats.DatePickerObj = null;
             }
-			*/
+			
 		});
 	},
 
@@ -484,11 +497,8 @@ let Stats = {
 		});
 
 		const sourceBtns = [
-			'statsTreasurePlayerH',
 			'statsTreasurePlayerD',
-			'statsTreasureClanH',
 			'statsTreasureClanD',
-			'statsUnitsH',
 			'statsUnitsD',
 			'statsRewards',
 			'statsGBGPlayers'
@@ -508,6 +518,7 @@ let Stats = {
 			disabled: !Stats.isSelectedTreasureSources() && !Stats.isSelectedUnitSources() && !Stats.isSelectedGBGSources(),
 			value: it
 		}));
+
 		return `<div class="option-era-dropdown">
 					${Stats.RenderEraSwitchers()}
 				</div>
@@ -532,13 +543,12 @@ let Stats = {
 
 
 	/**
-	 *
+	 * Render Date Buttons & DatePicker
 	 * @returns {string}
 	 */
-	RenderSecondaryOptions: () => {
+	RenderDateOptions: () => {
 		const btnsPeriodSelect = [
 			'today',
-			'sinceTuesday',
 			'last7days',
 			'thisMonth',
 			'last30days',
@@ -551,7 +561,18 @@ let Stats = {
 			value: it,
 		}));
 
-		//btnsPeriodSelect.push('<input class="game-cursor" id="GVGDatePicker" type="text">');
+		btnsPeriodSelect.push(`<input class="game-cursor" id="datePicker" type="text" value="${Stats.timeSpan.start}">`);
+
+		return `<div class="option-2-period">
+					${btnsPeriodSelect.join('')}
+				</div>`;
+	},
+
+	/**
+	 * Render Reward Buttons
+	 * @returns {string}
+	 */
+	RenderRewardOptions: () => {
 
 		const btnsRewardSelect = [
 			'__event',
@@ -567,10 +588,7 @@ let Stats = {
 			value: it,
 		}));
 
-		return `<div class="option-2-period">
-					${btnsPeriodSelect.join('')}
-				</div>
-				<div class="option-2-reward-source">
+		return `<div class="option-2-reward-source">
 					${btnsRewardSelect.join('')}
 				</div>`;
 	},
@@ -670,7 +688,7 @@ let Stats = {
 	 *
 	 * @returns {Promise<void>}
 	 */
-	updateCharts: async () => {
+	updateCharts: async (datePickerEnabled = false) => {
 		if (Stats.isSelectedGBGSources()) {
 			return await Stats.updateCommonChart(Stats.applyDeltaToSeriesIfNeed(await Stats.createGBGSeries()));
 		}
@@ -690,6 +708,28 @@ let Stats = {
 		if (Stats.isSelectedRewardSources) {
 			return Stats.updateRewardCharts(await Stats.createRewardSeries());
 		}
+
+		if (!datePickerEnabled) {
+			if (Stats.isSelectedGBGSources()) {
+				return await Stats.updateCommonChart(Stats.applyDeltaToSeriesIfNeed(await Stats.createGBGSeries(false)));
+			}
+
+			if (Stats.isSelectedUnitSources()) {
+				return await Stats.updateCommonChart(Stats.applyDeltaToSeriesIfNeed(await Stats.createUnitsSeries(false)));
+			}
+
+			if (Stats.isSelectedTreasureSources()) {
+				if (Stats.state.isGroupByEra) {
+					return await Stats.updateCommonChart(Stats.applyDeltaToSeriesIfNeed(await Stats.createTreasureGroupByEraSeries(false)));
+				} else {
+					return await Stats.updateCommonChart(Stats.applyDeltaToSeriesIfNeed(await Stats.createTreasureSeries(false)));
+				}
+			}
+
+			if (Stats.isSelectedRewardSources) {
+				return Stats.updateRewardCharts(await Stats.createRewardSeries(false));
+			}
+		}
 	},
 
 
@@ -699,18 +739,11 @@ let Stats = {
 	 * @param dates		Date obj with {start, end}
 	 * @returns {Promise<{series: {data, avatarUrl: (string|string), name: string}[], pointFormat: string}>}
 	 */
-	createGBGSeries: async (dates = null) => {
-		let data;
+	createGBGSeries: async (datePicker = true) => {
+		let data = await IndexDB.db['statsGBGPlayers'].orderBy('date').toArray();
 
-		if(dates !== null){
-
-			let from = moment(dates.s).toDate(),
-				to = moment(dates.e).toDate();
-
-			data = await IndexDB.db['statsGBGPlayers'].where('date').between(from, to).sortBy('date');
-
-		} else {
-			data = await IndexDB.db['statsGBGPlayers'].orderBy('date').toArray();
+		if(datePicker){
+			data = await IndexDB.db['statsGBGPlayers'].where('date').between(Stats.timeSpan.start, Stats.timeSpan.end).sortBy('date');
 		}
 
 		const playerCache = await IndexDB.db.statsGBGPlayerCache.toArray();
@@ -761,9 +794,13 @@ let Stats = {
 	 *
 	 * @returns {Promise<{series, pointFormat: string, footerFormat: string}>}
 	 */
-	createUnitsSeries: async () => {
+	createUnitsSeries: async (datePicker = true) => {
 		const source = Stats.state.source;
-		let data = await IndexDB.db[source].orderBy('date').toArray();
+
+		let data = await IndexDB.db[source].where('date').between(Stats.timeSpan.start, Stats.timeSpan.end).sortBy('date');
+		if (!datePicker) {
+			data = await IndexDB.db[source].orderBy('date').toArray();
+		}
 
 		const unitsTypes = data.reduce((acc, it) => {
 			const unitIds = Object.keys(it.army);
@@ -814,11 +851,14 @@ let Stats = {
 	 *
 	 * @returns {Promise<{series: {data, name: *}[]}>}
 	 */
-	createTreasureGroupByEraSeries: async () => {
+	createTreasureGroupByEraSeries: async (datePicker = true) => {
 		const source = Stats.state.source;
 		let data = await IndexDB.db[source].orderBy('date').toArray();
+		if (datePicker) {
+			await IndexDB.db[source].where('date').between(Stats.timeSpan.start, Stats.timeSpan.end).sortBy('date');
+		}
 
-		if (['statsTreasureClanH', 'statsTreasureClanD'].includes(source)) {
+		if (['statsTreasureClanD'].includes(source)) {
 			data = data.filter(it => it.clanId === ExtGuildID);
 		}
 
@@ -840,13 +880,16 @@ let Stats = {
 	 *
 	 * @returns {Promise<{series, pointFormat: string, colors: *[], footerFormat: string}>}
 	 */
-	createTreasureSeries: async () => {
+	createTreasureSeries: async (datePicker = true) => {
 		const source = Stats.state.source;
 		const selectedEras = Stats.getSelectedEras();
-		const isClanTreasure = ['statsTreasureClanH', 'statsTreasureClanD'].includes(source);
+		const isClanTreasure = ['statsTreasureClanD'].includes(source);
 		const hcColors = Highcharts.getOptions().colors;
 
-		let data = await IndexDB.db[source].orderBy('date').toArray();
+		let data = await IndexDB.db[source].where('date').between(Stats.timeSpan.start, Stats.timeSpan.end).sortBy('date');
+		if (!datePicker) {
+			data = await IndexDB.db[source].orderBy('date').toArray();
+		}
 
 		if (isClanTreasure) {
 			data = data.filter(it => it.clanId === ExtGuildID);
@@ -959,6 +1002,7 @@ let Stats = {
 	 * @returns {Promise<{xAxisPlotLines: {color: string, dashStyle: string, width: number, value: *}[], annotations: [{useHTML: boolean, labelOptions: {verticalAlign: string, backgroundColor: string, y: number, style: {fontSize: string}}, labels: {text: string, point: {xAxis: number, x: *, y: number}}[]}]}>}
 	 */
 	getAnnotations: async () => {
+		// todo
 		let data = await IndexDB.db.statsTreasureClanH.orderBy('date').toArray();
 		data = data.filter(it => it.clanId === ExtGuildID);
 
@@ -1139,21 +1183,10 @@ let Stats = {
 	 *
 	 * @returns {Promise<{series: [{data: this, name: string}], title: string}>}
 	 */
-	createRewardSeries: async () => {
+	createRewardSeries: async (datePicker = true) => {
 		const {period, rewardSource} = Stats.state;
 
-		const startDate = {
-			today: moment().startOf('day').toDate(),
-			yesterday: moment().startOf('day').subtract(1,'days').toDate(),
-			sinceTuesday: ((moment().startOf('isoWeek').add(1, 'days').toDate() > MainParser.getCurrentDate()) ?
-                           moment().startOf('isoWeek').subtract(1, 'weeks').add(1, 'days').toDate() : moment().startOf('isoWeek').add(1, 'days').toDate()),
-			last7days: moment().subtract(1, 'weeks').toDate(),
-			thisMonth: moment().startOf('month').toDate(),
-			last30days: moment().subtract(30, 'days').toDate(),
-			all: 0
-		}[period] || 0;
-
-		let data = await IndexDB.db.statsRewards.where('date').above(startDate).toArray();
+		let data = await IndexDB.db.statsRewards.where('date').between(Stats.timeSpan.start, Stats.timeSpan.end).sortBy('date');
 
 		const rewardTypes = await IndexDB.db.statsRewardTypes.toArray();
 		const groupedByRewardSource = {};
@@ -1196,7 +1229,7 @@ let Stats = {
 		}).sort((a, b) => b.y - a.y);
 
 		return {
-			title: i18n('Boxes.Stats.Rewards.SourceTitle.' + rewardSource) + '. ' + i18n('Boxes.Stats.PeriodTitle.' + period),
+			title: i18n('Boxes.Stats.Rewards.SourceTitle.' + rewardSource),
 			series: [{
 				name: rewardSource,
 				data: serieData
@@ -1266,6 +1299,40 @@ let Stats = {
 		const selectedEras = Object.keys(Stats.state.eras).filter(it => Stats.state.eras[it]);
 		// preserv order or era, filter again using ResMap keys
 		return Object.keys(Stats.ResMap).filter(era => selectedEras.includes(era));
+	},
+
+	setTimeSpan: (start, end) => {
+		Stats.timeSpan.start = start;
+		// hack to actually display until the end of a chosen day
+		Stats.timeSpan.end = moment(end).add(1, 'days').toDate();
+	},
+
+	setPredefinedTimeSpan: (value) => {
+		switch (value) {
+			case 'today':
+				Stats.setTimeSpan(moment().startOf('day').toDate(), moment().endOf('day').toDate());
+				break;
+			case 'yesterday':
+				Stats.setTimeSpan(moment().startOf('day').subtract(1,'days').toDate(), moment().endOf('day').toDate());
+				break;
+			case 'sinceTuesday':
+				Stats.setTimeSpan(((moment().startOf('isoWeek').add(1, 'days').toDate() > MainParser.getCurrentDate()) ?
+                           moment().startOf('isoWeek').subtract(1, 'weeks').add(1, 'days').toDate() : moment().startOf('isoWeek').add(1, 'days').toDate()), moment().endOf('day').toDate());
+				break;
+			case 'last7days':
+				Stats.setTimeSpan(moment().subtract(1, 'weeks').toDate(), Stats.timeSpan.end = moment().endOf('day').toDate());
+				break;
+			case 'thisMonth':
+				Stats.setTimeSpan(moment().startOf('month').toDate(), Stats.timeSpan.end = moment().endOf('day').toDate());
+				break;
+			case 'last30days':
+				Stats.setTimeSpan(moment().subtract(30, 'days').toDate(), Stats.timeSpan.end = moment().endOf('day').toDate());
+				break;
+			case 'all':
+				Stats.setTimeSpan(0, Stats.timeSpan.end = moment().endOf('day').toDate());
+				break;
+		}
+		console.log(Stats.timeSpan);
 	},
 
 
