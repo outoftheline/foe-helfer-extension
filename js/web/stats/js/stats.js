@@ -4,6 +4,7 @@
  * - DatePicker does not display the selected values after clicking anything else
  * - "today" is not displaying hourly
  * - GBG does not work with the DatePicker
+ * - Grouped Eras do not work with DatePicker
  * - tbc. (didn't find more, but there will be)
 */
 
