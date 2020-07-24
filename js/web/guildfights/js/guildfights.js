@@ -25,43 +25,13 @@ FoEproxy.addMetaHandler('battleground_colour', (xhr, postData) => {
 
 // Gildengefechte
 FoEproxy.addHandler('GuildBattlegroundService', 'getPlayerLeaderboard', (data, postData) => {
-	// immer zwei vorhalten, für Referenz Daten (LiveUpdate)
-	if(localStorage.getItem('GildFights.NewAction') !== null){
-		GildFights.PrevAction = JSON.parse(localStorage.getItem('GildFights.NewAction'));
-		GildFights.PrevActionTimestamp = parseInt(localStorage.getItem('GildFights.NewActionTimestamp'));
-	}
-	else if(GildFights.NewAction !== null){
-		GildFights.PrevAction = GildFights.NewAction;
-		GildFights.PrevActionTimestamp = GildFights.NewActionTimestamp;
-	}
+	GildFights.HandlePlayerLeaderboard(data.responseData);
+});
 
-	let d = data['responseData'],
-		players = [];
-
-	for(let i in d){
-		if(!d.hasOwnProperty(i)){
-			break;
-		}
-
-		players.push({
-			player_id: d[i]['player']['player_id'],
-			name: d[i]['player']['name'],
-			avatar: d[i]['player']['avatar'],
-			battlesWon: d[i]['battlesWon'] || 0,
-			negotiationsWon: d[i]['negotiationsWon'] || 0
-		});
-	}
-
-	GildFights.NewAction = players;
-	localStorage.setItem('GildFights.NewAction', JSON.stringify(GildFights.NewAction));
-
-	GildFights.NewActionTimestamp = moment().unix();
-	localStorage.setItem('GildFights.NewActionTimestamp', GildFights.NewActionTimestamp);
-
-	if( $('#GildPlayers').length > 0 ){
-		GildFights.BuildPlayerContent();
-	} else {
-		GildFights.ShowPlayerBox();
+// Gildengefechte
+FoEproxy.addHandler('GuildBattlegroundStateService', 'getState', (data, postData) => {
+	if (data.responseData['stateId'] !== 'participating') {
+		GildFights.HandlePlayerLeaderboard(data.responseData['playerLeaderboardEntries']);
 	}
 });
 
@@ -108,6 +78,47 @@ let GildFights = {
 			GildFights.InjectionLoaded = true;
 		}
 	},
+
+
+	HandlePlayerLeaderboard: (d) => {
+		// immer zwei vorhalten, für Referenz Daten (LiveUpdate)
+		if (localStorage.getItem('GildFights.NewAction') !== null) {
+			GildFights.PrevAction = JSON.parse(localStorage.getItem('GildFights.NewAction'));
+			GildFights.PrevActionTimestamp = parseInt(localStorage.getItem('GildFights.NewActionTimestamp'));
+		}
+		else if (GildFights.NewAction !== null) {
+			GildFights.PrevAction = GildFights.NewAction;
+			GildFights.PrevActionTimestamp = GildFights.NewActionTimestamp;
+		}
+
+		let players = [];
+
+		for (let i in d) {
+			if (!d.hasOwnProperty(i)) {
+				break;
+			}
+
+			players.push({
+				player_id: d[i]['player']['player_id'],
+				name: d[i]['player']['name'],
+				avatar: d[i]['player']['avatar'],
+				battlesWon: d[i]['battlesWon'] || 0,
+				negotiationsWon: d[i]['negotiationsWon'] || 0
+			});
+		}
+
+		GildFights.NewAction = players;
+		localStorage.setItem('GildFights.NewAction', JSON.stringify(GildFights.NewAction));
+
+		GildFights.NewActionTimestamp = moment().unix();
+		localStorage.setItem('GildFights.NewActionTimestamp', GildFights.NewActionTimestamp);
+
+		if ($('#GildPlayers').length > 0) {
+			GildFights.BuildPlayerContent();
+		} else {
+			GildFights.ShowPlayerBox();
+		}
+    },
 
 
 	/**
@@ -304,6 +315,7 @@ let GildFights = {
 
 			colors.push({
 				id: bP[i]['participantId'],
+				cid: c['id'],
 				base: c['base'],
 				main: c['mainColour'],
 				highlight: c['highlight'],
