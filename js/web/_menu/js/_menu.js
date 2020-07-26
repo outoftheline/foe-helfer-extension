@@ -22,6 +22,7 @@ let _menu = {
 	HudCount: 0,
 	HudLength: 0,
 	HudHeight: 0,
+	isDraggable: true,
 
 	Items: [
 		'calculator',
@@ -136,14 +137,14 @@ let _menu = {
 	 */
 	ListLinks: () => {
 		let hudSlider = $('#foe-helper-hud-slider'),
-			StorgedItems = localStorage.getItem('MenuSort');
+			StoredItems = localStorage.getItem('MenuPosition') || localStorage.getItem('MenuSort');
 
-		if (StorgedItems !== null) {
-			let storedItems = JSON.parse(StorgedItems);
+		if (StoredItems !== null) {
+			let storedItems = JSON.parse(StoredItems);
 
 			// es ist kein neues Item hinzugekommen
 			if (_menu.Items.length === storedItems.length) {
-				_menu.Items = JSON.parse(StorgedItems);
+				_menu.Items = JSON.parse(StoredItems);
 			}
 
 			// ermitteln in welchem Array was fehlt...
@@ -160,14 +161,14 @@ let _menu = {
 					});
 				});
 
-				_menu.Items = JSON.parse(StorgedItems);
+				_menu.Items = JSON.parse(StoredItems);
 
 				let items = missingMenu.concat(missingStored);
 
 				// es gibt tatsächlich was neues...
 				if (items.length > 0) {
 					for (let i in items) {
-						if (!items.hasOwnProperty(i)) {
+						if (!items.hasOwnProperty(i)) { 
 							break;
 						}
 
@@ -181,6 +182,10 @@ let _menu = {
 		// Dubletten rausfiltern
 		function unique(arr) {
 			return arr.filter(function (value, index, self) {
+				if (self[index].slug !== undefined) {
+					value = self[index].slug;
+				}
+
 				return self.indexOf(value) === index;
 			});
 		}
@@ -188,18 +193,27 @@ let _menu = {
 		_menu.Items = unique(_menu.Items);
 
 		// Menüpunkte einbinden
-		for (let i in _menu.Items) {
-			if (!_menu.Items.hasOwnProperty(i)) {
-				break;
-			}
+		// new format
+		_menu.Items.forEach(function(item, index) {
+			item = {
+				'slug': item,
+				'posX': 0,
+				'posY': 0
+			};
+			_menu.Items[index] = item;
+			console.log(_menu.Items);
 
-			const name = _menu.Items[i] + '_Btn';
+			/*if (!_menu.Items.hasOwnProperty(index)) {
+				break;
+			}*/
+			
+			const name = _menu.Items[index].slug + '_Btn';
 
 			// gibt es eine Funktion?
 			if (_menu[name] !== undefined) {
 				hudSlider.append(_menu[name]());
 			}
-		}
+		});
 
 		_menu.CheckButtons();
 	},
@@ -246,52 +260,79 @@ let _menu = {
 		});
 
 		// Sortierfunktion der Menü-items
-		$('#foe-helper-hud-slider').sortable({
-			placeholder: 'menu-placeholder',
-			axis: 'y',
-			start: function () {
-				$('#foe-helper-hud').addClass('is--sorting');
-			},
-			sort: function () {
+		if (_menu.isDraggable) {
+			$('#foe-helper-hud-slider .hud-btn').draggable({
+				snap: true,
+				start: function () {
+					$(this).addClass('is--dragging');
+				},
+				stop: function () {
+					_menu.Items = [];
 
-				$('.is--sorting .hud-btn-up-active').mouseenter(function (e) {
-					$('.hud-btn-up-active').stop().addClass('hasFocus');
+					$('.hud-btn').each(function () {
+						_menu.Items.push({
+							'slug': $(this).data('slug')
+						});
+					});
 
-					setTimeout(() => {
-						if ($('.is--sorting .hud-btn-up-active').hasClass('hasFocus')) {
-							_menu.ClickButtonUp();
-						}
-					}, 1000);
+					localStorage.setItem('MenuPosition', JSON.stringify(_menu.Items));
 
-				}).mouseleave(function () {
-					$('.is--sorting .hud-btn-up-active').removeClass('hasFocus');
-				});
+					$(this).removeClass('is--dragging');
+				}
+			});
+		}
+		else {
+			$('#foe-helper-hud-slider').sortable({
+				placeholder: 'menu-placeholder',
+				axis: 'y',
+				start: function () {
+					$('#foe-helper-hud').addClass('is--sorting');
+				},
+				sort: function () {
 
-				$('.is--sorting .hud-btn-down-active').mouseenter(function (e) {
-					$('.is--sorting .hud-btn-down-active').stop().addClass('hasFocus');
+					$('.is--sorting .hud-btn-up-active').mouseenter(function (e) {
+						$('.hud-btn-up-active').stop().addClass('hasFocus');
 
-					setTimeout(() => {
-						if ($('.is--sorting .hud-btn-down-active').hasClass('hasFocus')) {
-							_menu.ClickButtonDown();
-						}
-					}, 1000);
+						setTimeout(() => {
+							if ($('.is--sorting .hud-btn-up-active').hasClass('hasFocus')) {
+								_menu.ClickButtonUp();
+							}
+						}, 1000);
 
-				}).mouseleave(function () {
-					$('.is--sorting .hud-btn-down-active').removeClass('hasFocus');
-				});
-			},
-			stop: function () {
-				_menu.Items = [];
+					}).mouseleave(function () {
+						$('.is--sorting .hud-btn-up-active').removeClass('hasFocus');
+					});
 
-				$('.hud-btn').each(function () {
-					_menu.Items.push($(this).data('slug'));
-				});
+					$('.is--sorting .hud-btn-down-active').mouseenter(function (e) {
+						$('.is--sorting .hud-btn-down-active').stop().addClass('hasFocus');
 
-				localStorage.setItem('MenuSort', JSON.stringify(_menu.Items));
+						setTimeout(() => {
+							if ($('.is--sorting .hud-btn-down-active').hasClass('hasFocus')) {
+								_menu.ClickButtonDown();
+							}
+						}, 1000);
 
-				$('#foe-helper-hud').removeClass('is--sorting');
-			}
-		});
+					}).mouseleave(function () {
+						$('.is--sorting .hud-btn-down-active').removeClass('hasFocus');
+					});
+				},
+				stop: function () {
+					_menu.Items = [];
+
+					$('.hud-btn').each(function () {
+						_menu.Items.push({
+							'slug': $(this).data('slug')
+						});
+					});
+
+					localStorage.setItem('MenuSort', JSON.stringify(_menu.Items));
+					localStorage.setItem('MenuPosition', JSON.stringify(_menu.Items));
+
+					$('#foe-helper-hud').removeClass('is--sorting');
+				}
+			});
+		}
+
 
 		HiddenRewards.SetCounter();
 	},
