@@ -357,7 +357,7 @@ p {
 	background: url('../images/hud/menu.png') top left no-repeat;
 }
 
-#foe-helper-hud::before {
+#foe-helper-hud:not(.draggable-wrapper)::before {
 	content: '';
 	width: 64px;
 	height: 26px;
@@ -366,7 +366,7 @@ p {
 	left: 0;
 }
 
-#foe-helper-hud::after {
+#foe-helper-hud:not(.draggable-wrapper)::after {
 	content: '';
 	width: 64px;
 	height: 24px;
@@ -383,6 +383,7 @@ p {
 	position: absolute;
 	right: 0;
 	top: 26px;
+	overflow: hidden;
 	background: url('../images/hud/menu-bg.png') top left repeat-y
 }
 
@@ -446,12 +447,24 @@ p {
 	background-position: -124px -16px;
 }
 
+.hud-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
 .hud-btn:not(.draggable) {
-	display: block;
 	background-position: -122px -33px;
 	width: 55px;
 	height: 55px;
 	position: relative;
+}
+
+.hud-btn.ui-draggable {
+	width: 31px;
+	height: 31px;
+	position: absolute;
+	background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('../images/hud/box-bg.png') 0 0 no-repeat;
 }
 
 .hud-btn.hud-btn-red {
@@ -462,12 +475,9 @@ p {
 	background-position: center center;
 	background-repeat: no-repeat;
 	display: block;
-	width: 38px;
-	height: 38px;
+	width: 80%;
+	height: 80%;
 	background-size: contain;
-	position: absolute;
-	top: 8px;
-	left: 8px;
 }
 
 .menu-placeholder {

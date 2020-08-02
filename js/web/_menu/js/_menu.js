@@ -51,7 +51,13 @@ let _menu = {
 	 *
 	 */
 	BuildOverlayMenu: () => {
+		if (_menu.isDraggable)
+			_menu.BuildDraggableMenu();
+		else
+			_menu.BuildSortableMenu();
+	},
 
+	BuildSortableMenu: () => {
 		let hud = $('<div />').attr('id', 'foe-helper-hud').addClass('game-cursor'),
 			hudWrapper = $('<div />').attr('id', 'foe-helper-hud-wrapper'),
 			hudInner = $('<div />').attr('id', 'foe-helper-hud-slider');
@@ -81,6 +87,18 @@ let _menu = {
 		window.onresize = function (event) {
 			_menu.SetMenuHeight(true);
 		};
+	},
+
+
+	BuildDraggableMenu: () => {
+		let hud = $('<div />').attr('id', 'foe-helper-hud').addClass('game-cursor draggable-wrapper');
+
+		$('body').append(hud).ready(function () {
+			// Buttons einfügen
+			_menu.ListDraggableLinks();
+		});
+
+		window.dispatchEvent(new CustomEvent('foe-helper#menu_loaded'));
 	},
 
 
@@ -197,11 +215,10 @@ let _menu = {
 		_menu.Items.forEach(function(item, index) {
 			item = {
 				'slug': item,
-				'posX': 0,
-				'posY': 0
+				'posX': item.posX || 0,
+				'posY': item.posY || 0
 			};
 			_menu.Items[index] = item;
-			console.log(_menu.Items);
 
 			/*if (!_menu.Items.hasOwnProperty(index)) {
 				break;
@@ -219,31 +236,119 @@ let _menu = {
 	},
 
 
+
+
+	/**
+	 * Bindet alle benötigten Button ein
+	 *
+	 */
+	ListDraggableLinks: () => {
+		let hud = $('#foe-helper-hud'),
+			StoredItems = localStorage.getItem('MenuPosition');
+
+		if (StoredItems === null) {
+			StoredItems = localStorage.getItem('MenuSort');
+		}
+
+		if (StoredItems !== null) {
+			let storedItems = JSON.parse(StoredItems);
+
+			// es ist kein neues Item hinzugekommen
+			if (_menu.Items.length === storedItems.length) {
+				_menu.Items = JSON.parse(StoredItems);
+			}
+
+			// ermitteln in welchem Array was fehlt...
+			else {
+				let missingMenu = storedItems.filter(function (sI) {
+					return !_menu.Items.some(function (mI) {
+						return sI === mI;
+					});
+				});
+
+				let missingStored = _menu.Items.filter(function (mI) {
+					return !storedItems.some(function (sI) {
+						return sI === mI;
+					});
+				});
+
+				_menu.Items = JSON.parse(StoredItems);
+
+				let items = missingMenu.concat(missingStored);
+
+				// es gibt tatsächlich was neues...
+				if (items.length > 0) {
+					for (let i in items) {
+						if (!items.hasOwnProperty(i)) { 
+							break;
+						}
+
+						// ... neues kommt vorne dran ;-)
+						_menu.Items.unshift(items[i]);
+					}
+				}
+			}
+		}
+
+		// Dubletten rausfiltern
+		function unique(arr) {
+			return arr.filter(function (value, index, self) {
+				if (self[index].slug !== undefined) {
+					value = self[index].slug;
+				}
+				return self.indexOf(value) === index;
+			});
+		}
+
+		_menu.Items = unique(_menu.Items);
+
+		// Menüpunkte einbinden
+		// new format
+		_menu.Items.forEach(function(item, index) {
+			console.log(item);
+			item = {
+				'slug': item,
+				'posX': item.posX || 0,
+				'posY': item.posY || 0
+			};
+			_menu.Items[index] = item;
+
+			/*if (!_menu.Items.hasOwnProperty(index)) {
+				break;
+			}*/
+			
+			const name = _menu.Items[index].slug + '_Btn';
+
+			// gibt es eine Funktion?
+			if (_menu[name] !== undefined) {
+				hud.append(_menu[name]());
+			}
+		});
+
+		_menu.CheckButtons();
+	},
+
+
 	/**
 	 * Panel scrollbar machen
 	 *
 	 */
 	CheckButtons: () => {
-
 		let activeIdx = 0;
-
 
 		$('.hud-btn').click(function () {
 			activeIdx = $(this).index('.hud-btn');
 		});
-
 
 		// Klick auf Pfeil nach unten
 		$('body').on('click', '.hud-btn-down-active', function () {
 			_menu.ClickButtonDown();
 		});
 
-
 		// Klick auf Pfeil nach oben
 		$('body').on('click', '.hud-btn-up-active', function () {
 			_menu.ClickButtonUp();
 		});
-
 
 		// Tooltipp top ermitteln und einblenden
 		$('.hud-btn').stop().hover(function () {
@@ -261,7 +366,7 @@ let _menu = {
 
 		// Sortierfunktion der Menü-items
 		if (_menu.isDraggable) {
-			$('#foe-helper-hud-slider .hud-btn').draggable({
+			$('#foe-helper-hud .hud-btn').draggable({
 				snap: true,
 				start: function () {
 					$(this).addClass('is--dragging');
@@ -271,7 +376,9 @@ let _menu = {
 
 					$('.hud-btn').each(function () {
 						_menu.Items.push({
-							'slug': $(this).data('slug')
+							'slug': $(this).data('slug'),
+							'posX': $(this).css('top'),
+							'posY': $(this).css('left')
 						});
 					});
 
@@ -282,59 +389,63 @@ let _menu = {
 			});
 		}
 		else {
-			$('#foe-helper-hud-slider').sortable({
-				placeholder: 'menu-placeholder',
-				axis: 'y',
-				start: function () {
-					$('#foe-helper-hud').addClass('is--sorting');
-				},
-				sort: function () {
-
-					$('.is--sorting .hud-btn-up-active').mouseenter(function (e) {
-						$('.hud-btn-up-active').stop().addClass('hasFocus');
-
-						setTimeout(() => {
-							if ($('.is--sorting .hud-btn-up-active').hasClass('hasFocus')) {
-								_menu.ClickButtonUp();
-							}
-						}, 1000);
-
-					}).mouseleave(function () {
-						$('.is--sorting .hud-btn-up-active').removeClass('hasFocus');
-					});
-
-					$('.is--sorting .hud-btn-down-active').mouseenter(function (e) {
-						$('.is--sorting .hud-btn-down-active').stop().addClass('hasFocus');
-
-						setTimeout(() => {
-							if ($('.is--sorting .hud-btn-down-active').hasClass('hasFocus')) {
-								_menu.ClickButtonDown();
-							}
-						}, 1000);
-
-					}).mouseleave(function () {
-						$('.is--sorting .hud-btn-down-active').removeClass('hasFocus');
-					});
-				},
-				stop: function () {
-					_menu.Items = [];
-
-					$('.hud-btn').each(function () {
-						_menu.Items.push({
-							'slug': $(this).data('slug')
-						});
-					});
-
-					localStorage.setItem('MenuSort', JSON.stringify(_menu.Items));
-					localStorage.setItem('MenuPosition', JSON.stringify(_menu.Items));
-
-					$('#foe-helper-hud').removeClass('is--sorting');
-				}
-			});
+			_menu.SortButtons();
 		}
 
 
 		HiddenRewards.SetCounter();
+	},
+
+	SortButtons: () => {
+		$('#foe-helper-hud-slider').sortable({
+			placeholder: 'menu-placeholder',
+			axis: 'y',
+			start: function () {
+				$('#foe-helper-hud').addClass('is--sorting');
+			},
+			sort: function () {
+
+				$('.is--sorting .hud-btn-up-active').mouseenter(function (e) {
+					$('.hud-btn-up-active').stop().addClass('hasFocus');
+
+					setTimeout(() => {
+						if ($('.is--sorting .hud-btn-up-active').hasClass('hasFocus')) {
+							_menu.ClickButtonUp();
+						}
+					}, 1000);
+
+				}).mouseleave(function () {
+					$('.is--sorting .hud-btn-up-active').removeClass('hasFocus');
+				});
+
+				$('.is--sorting .hud-btn-down-active').mouseenter(function (e) {
+					$('.is--sorting .hud-btn-down-active').stop().addClass('hasFocus');
+
+					setTimeout(() => {
+						if ($('.is--sorting .hud-btn-down-active').hasClass('hasFocus')) {
+							_menu.ClickButtonDown();
+						}
+					}, 1000);
+
+				}).mouseleave(function () {
+					$('.is--sorting .hud-btn-down-active').removeClass('hasFocus');
+				});
+			},
+			stop: function () {
+				_menu.Items = [];
+
+				$('.hud-btn').each(function () {
+					_menu.Items.push({
+						'slug': $(this).data('slug')
+					});
+				});
+
+				localStorage.setItem('MenuSort', JSON.stringify(_menu.Items));
+				localStorage.setItem('MenuPosition', JSON.stringify(_menu.Items));
+
+				$('#foe-helper-hud').removeClass('is--sorting');
+			}
+		});
 	},
 
 
@@ -422,7 +533,21 @@ let _menu = {
 
 		ToolTipp.prepend($('<div />').addClass('toolTipHeader').text(title));
 
-		$('body').append(ToolTipp);
+		//$('body').append(ToolTipp); doof
+	},
+
+	addPosToBtn:(elem) => {
+		let StoredItems = localStorage.getItem('MenuPosition'),
+			slug = elem.attr('data-slug');
+		if (StoredItems !== null) {
+			StoredItems = JSON.parse(StoredItems);
+			let item = StoredItems.find(obj => obj.slug === slug);
+			elem.css({
+				'top': item.posY,
+				'left': item.posX
+			});
+		}
+		return elem;
 	},
 
 	/*----------------------------------------------------------------------------------------------------------------*/
@@ -434,6 +559,9 @@ let _menu = {
 	 */
 	calculator_Btn: () => {
 		let btn_CalcBG = $('<div />').attr({ 'id': 'calculator-Btn', 'data-slug': 'calculator' }).addClass('hud-btn hud-btn-red');
+
+		if (_menu.isDraggable)
+			btn_CalcBG = _menu.addPosToBtn(btn_CalcBG);
 
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Calculator.Title'), '<em id="calculator-Btn-closed" class="tooltip-error">' + i18n('Menu.Calculator.Warning') + '<br></em>' + i18n('Menu.Calculator.Desc'), 'calculator-Btn');
@@ -459,6 +587,9 @@ let _menu = {
 	partCalc_Btn: () => {
 		let btn_OwnBG = $('<div />').attr({ 'id': 'partCalc-Btn', 'data-slug': 'partCalc' }).addClass('hud-btn hud-btn-red');
 
+		if (_menu.isDraggable)
+			btn_OwnBG = _menu.addPosToBtn(btn_OwnBG);
+
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.OwnpartCalculator.Title'), '<em id="partCalc-Btn-closed" class="tooltip-error">' + i18n('Menu.OwnpartCalculator.Warning') + '<br></em>' + i18n('Menu.OwnpartCalculator.Desc'), 'partCalc-Btn');
 
@@ -482,9 +613,11 @@ let _menu = {
 	 * @returns {*|jQuery}
 	 */
 	outpost_Btn: () => {
-
 		let btn_outPBG = $('<div />').attr({ 'id': 'outpost-Btn', 'data-slug': 'outpost' }).addClass('hud-btn'),
 			desc = i18n('Menu.OutP.Desc');
+
+		if (_menu.isDraggable)
+			btn_outPBG = _menu.addPosToBtn(btn_outPBG);
 
 		if (Outposts.OutpostData === null) {
 			btn_outPBG.addClass('hud-btn-red');
@@ -521,6 +654,9 @@ let _menu = {
 	productions_Btn: () => {
 		let btn_FPsBG = $('<div />').attr({ 'id': 'productions-Btn', 'data-slug': 'productions' }).addClass('hud-btn');
 
+		if (_menu.isDraggable)
+			btn_FPsBG = _menu.addPosToBtn(btn_FPsBG);
+
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Productions.Title'), i18n('Menu.Productions.Desc'), 'productions-Btn');
 
@@ -543,6 +679,9 @@ let _menu = {
 	 */
 	negotiation_Btn: () => {
 		let btn_NegotiationBG = $('<div />').attr({ 'id': 'negotiation-Btn', 'data-slug': 'negotiation' }).addClass('hud-btn hud-btn-red');
+
+		if (_menu.isDraggable)
+			btn_NegotiationBG = _menu.addPosToBtn(btn_NegotiationBG);
 
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Negotiation.Title'), '<em id="negotiation-Btn-closed" class="tooltip-error">' + i18n('Menu.Negotiation.Warning') + '<br></em>' + i18n('Menu.Negotiation.Desc'), 'negotiation-Btn');
@@ -569,6 +708,9 @@ let _menu = {
 
 		let btn_Info = $('<div />').attr({ 'id': 'infobox-Btn', 'data-slug': 'infobox' }).addClass('hud-btn');
 
+		if (_menu.isDraggable)
+			btn_Info = _menu.addPosToBtn(btn_Info);
+
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Info.Title'), i18n('Menu.Info.Desc'), 'infobox-Btn');
 
@@ -591,6 +733,9 @@ let _menu = {
 	 */
 	technologies_Btn: () => {
 		let btn_TechBG = $('<div />').attr({ 'id': 'technologies-Btn', 'data-slug': 'technologies' }).addClass('hud-btn hud-btn-red');
+
+		if (_menu.isDraggable)
+			btn_TechBG = _menu.addPosToBtn(btn_TechBG);
 
 		// Tooltip einbinden
 
@@ -617,6 +762,9 @@ let _menu = {
 	campagneMap_Btn: () => {
 		let btn_MapBG = $('<div />').attr({ 'id': 'campagneMap-Btn', 'data-slug': 'campagneMap' }).addClass('hud-btn hud-btn-red');
 
+		if (_menu.isDraggable)
+			btn_MapBG = _menu.addPosToBtn(btn_MapBG);
+
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Campagne.Title'), '<em id="campagneMap-Btn-closed" class="tooltip-error">' + i18n('Menu.Campagne.Warning') + '<br></em>' + i18n('Menu.Campagne.Desc'), 'campagneMap-Btn');
 
@@ -641,6 +789,9 @@ let _menu = {
 	citymap_Btn: () => {
 		let btn_CityBG = $('<div />').attr({ 'id': 'citymap-Btn', 'data-slug': 'citymap' }).addClass('hud-btn');
 
+		if (_menu.isDraggable)
+			btn_CityBG = _menu.addPosToBtn(btn_CityBG);
+
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Citymap.Title'), i18n('Menu.Citymap.Desc'), 'citymap-Btn');
 
@@ -663,6 +814,9 @@ let _menu = {
 	hiddenRewards_Btn: () => {
 		let btn_RewardsBG = $('<div />').attr({ 'id': 'hiddenRewards-Btn', 'data-slug': 'hiddenRewards' }).addClass('hud-btn');
 
+		if (_menu.isDraggable)
+			btn_RewardsBG = _menu.addPosToBtn(btn_RewardsBG);
+
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.HiddenRewards.Title'), i18n('Menu.HiddenRewards.Desc'), 'hiddenRewards-Btn');
 
@@ -683,6 +837,9 @@ let _menu = {
 	 */
 	unit_Btn: () => {
 		let btn_UnitBG = $('<div />').attr({ 'id': 'unit-Btn', 'data-slug': 'unit' }).addClass('hud-btn hud-btn-red');
+
+		if (_menu.isDraggable)
+			btn_UnitBG = _menu.addPosToBtn(btn_UnitBG);
 
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Unit.Title'), '<em id="unit-Btn-closed" class="tooltip-error">' + i18n('Menu.Unit.Warning') + '<br></em>' + i18n('Menu.Unit.Desc'), 'unit-Btn');
@@ -707,6 +864,9 @@ let _menu = {
 	 */
 	notice_Btn: () => {
 		let btn_NoticeBG = $('<div />').attr({ 'id': 'notice-Btn', 'data-slug': 'notice' }).addClass('hud-btn');
+		
+		if (_menu.isDraggable)
+			btn_NoticeBG = _menu.addPosToBtn(btn_NoticeBG);
 
 		_menu.toolTippBox(i18n('Menu.Notice.Title'), i18n('Menu.Notice.Desc'), 'notice-Btn');
 
@@ -728,6 +888,9 @@ let _menu = {
 	settings_Btn: () => {
 
 		let btn = $('<div />').attr({ 'id': 'settings-Btn', 'data-slug': 'settings' }).addClass('hud-btn');
+		
+		if (_menu.isDraggable)
+			btn = _menu.addPosToBtn(btn);
 
 		_menu.toolTippBox(i18n('Menu.Settings.Title'), i18n('Menu.Settings.Desc'), 'settings-Btn');
 
@@ -748,6 +911,9 @@ let _menu = {
 	 */
 	stats_Btn: () => {
 		let btn_StatsBG = $('<div />').attr({ 'id': 'stats-Btn', 'data-slug': 'stats' }).addClass('hud-btn');
+		
+		if (_menu.isDraggable)
+			btn_StatsBG = _menu.addPosToBtn(btn_StatsBG);
 
 		_menu.toolTippBox(i18n('Menu.Stats.Title'), i18n('Menu.Stats.Desc'), 'stats-Btn');
 
@@ -772,6 +938,9 @@ let _menu = {
 	/* @TODO chat_Btn: () => {
 
 		let btn = $('<div />').attr({ 'id': 'chat-Btn', 'data-slug': 'chat' }).addClass('hud-btn');
+		
+		if (_menu.isDraggable)
+			btn = _menu.addPosToBtn(btn);
 
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Chat.Title'), i18n('Menu.Chat.Desc'), 'chat-Btn');
@@ -799,6 +968,9 @@ let _menu = {
 	kits_Btn: ()=> {
 
 		let btn = $('<div />').attr({ 'id': 'kits-Btn', 'data-slug': 'kits' }).addClass('hud-btn');
+		
+		if (_menu.isDraggable)
+			btn = _menu.addPosToBtn(btn);
 
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Kits.Title'), i18n('Menu.Kits.Desc'), 'kits-Btn');
@@ -820,6 +992,9 @@ let _menu = {
 	greatbuildings_Btn: () => {
 
 		let btn = $('<div />').attr({ 'id': 'greatbuildings-Btn', 'data-slug': 'greatbuildings' }).addClass('hud-btn');
+		
+		if (_menu.isDraggable)
+			btn = _menu.addPosToBtn(btn);
 
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.greatbuildings.Title'), i18n('Menu.greatbuildings.Desc'), 'greatbuildings-Btn');
@@ -841,6 +1016,9 @@ let _menu = {
 	 */
 	market_Btn: () => {
 		let btn_MarketBG = $('<div />').attr({ 'id': 'market-Btn', 'data-slug': 'market' }).addClass('hud-btn hud-btn-red');
+		
+		if (_menu.isDraggable)
+			btn_MarketBG = _menu.addPosToBtn(btn_MarketBG);
 
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Market.Title'), '<em id="market-Btn-closed" class="tooltip-error">' + i18n('Menu.Market.Warning') + '<br></em>' + i18n('Menu.Market.Desc'), 'market-Btn');
