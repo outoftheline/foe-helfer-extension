@@ -349,7 +349,7 @@ p {
 
 #foe-helper-hud::before,
 #foe-helper-hud::after,
-.hud-btn:not(.draggable),
+.hud-btn:not(.ui-draggable),
 .hud-btn-up::before,
 .hud-btn-up-active::before,
 .hud-btn-down::before,
@@ -453,7 +453,7 @@ p {
 	justify-content: center;
 }
 
-.hud-btn:not(.draggable) {
+.hud-btn:not(.ui-draggable) {
 	background-position: -122px -33px;
 	width: 55px;
 	height: 55px;
@@ -464,11 +464,18 @@ p {
 	width: 31px;
 	height: 31px;
 	position: absolute;
-	background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('../images/hud/box-bg.png') 0 0 no-repeat;
+	background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url('../images/hud/box-bg.png') 0 0 no-repeat;
+	border-left: 1px solid transparent;
+	border-bottom: 1px solid transparent;
 }
 
 .hud-btn.hud-btn-red {
 	background-position: -65px -33px;
+}
+
+.hud-btn.hud-btn-red.ui-draggable {
+	background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('../images/hud/box-bg.png') 0 0 no-repeat;
+	filter: grayscale(50%);
 }
 
 .hud-btn span:first-child {
@@ -478,6 +485,10 @@ p {
 	width: 80%;
 	height: 80%;
 	background-size: contain;
+}
+
+.hud-btn.hud-btn-red.ui-draggable span:first-child {
+	filter: contrast(150%) grayscale(90%);
 }
 
 .menu-placeholder {
@@ -498,8 +509,18 @@ p {
 	border-radius: 50%;
 	line-height: 16px;
 	text-align: center;
-    box-shadow: 1px 0 0 1px rgba(0,0,0,0.245);
-    pointer-events: none;
+   box-shadow: 1px 0 0 1px rgba(0,0,0,0.245);
+   pointer-events: none;
+}
+
+.hud-btn.ui-draggable span.hud-counter {
+	width: 12px;
+	height: 12px;
+	bottom: -2px;
+	left: 0;
+	line-height: 11px;
+	font-size: 11px;
+	font-weight: bold;
 }
 
 #market-Btn span {

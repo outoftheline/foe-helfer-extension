@@ -377,8 +377,8 @@ let _menu = {
 					$('.hud-btn').each(function () {
 						_menu.Items.push({
 							'slug': $(this).data('slug'),
-							'posX': $(this).css('top'),
-							'posY': $(this).css('left')
+							'posX': $(this).css('left'),
+							'posY': $(this).css('top')
 						});
 					});
 
