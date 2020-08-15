@@ -347,6 +347,15 @@ p {
 	font-weight: 400;
 }
 
+#foe-helper-hud.draggable-wrapper {
+	top: 0;
+	right: unset;
+	left: 0;
+	width: auto;
+	height: auto;
+	padding: 0;
+}
+
 #foe-helper-hud::before,
 #foe-helper-hud::after,
 .hud-btn:not(.ui-draggable),
@@ -475,7 +484,6 @@ p {
 
 .hud-btn.hud-btn-red.ui-draggable {
 	background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('../images/hud/box-bg.png') 0 0 no-repeat;
-	filter: grayscale(50%);
 }
 
 .hud-btn span:first-child {
@@ -489,6 +497,7 @@ p {
 
 .hud-btn.hud-btn-red.ui-draggable span:first-child {
 	filter: contrast(150%) grayscale(90%);
+	opacity: 0.5;
 }
 
 .menu-placeholder {
