@@ -1359,7 +1359,7 @@ let Stats = {
 				Stats.setTimeSpan(moment().subtract(30, 'days').toDate(), Stats.timeSpan.end = moment().endOf('day').toDate());
 				break;
 			case 'all':
-				Stats.setTimeSpan(0 , Stats.timeSpan.end = moment().endOf('day').toDate());
+				Stats.setTimeSpan(0, Stats.timeSpan.end = moment().endOf('day').toDate());
 				break;
 		}
 		console.log(Stats.timeSpan);
