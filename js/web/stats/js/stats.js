@@ -1,7 +1,6 @@
 /*
  * Messy code has these issues:
  * - GvG Annotations do not work anymore
- * - DatePicker does not display the selected values after clicking anything else
  * - "today" is not displaying hourly
  * - GBG does not work with the DatePicker
  * - Grouped Eras do not work with DatePicker
@@ -399,31 +398,52 @@ let Stats = {
 		$('#statsBody .options-2').html(dateOptions + rewardOptions);
 
 		$('#statsBody .options-2').promise().done(function(){
-			
 			if ($('#datePicker').length > 0) {
-				let datePickerEnabled = true;
-				Stats.DatePickerObj = new Litepicker({
-					element: document.getElementById('datePicker'),
-					format: i18n('Date'),
-					lang: MainParser.Language,
-					singleMode: false,
-					maxDate: MainParser.getCurrentDate(),
-					showWeekNumbers: true,
-					autoRefresh: true,
-					onSelect: async function (start, end) {
-						$('#datePicker').text(`${start} - ${end}`);
-						Stats.setTimeSpan(start, end);
-						console.log(Stats.timeSpan);
-						Stats.state.period = null;
-						$('.option-2-period .btn-tight').removeClass('btn-green');
-
-						Stats.updateCharts(datePickerEnabled);
-					}
-				});
+				if (Stats.timeSpan && Stats.state.period === null) {
+					let datePickerEnabled = true;
+					Stats.DatePickerObj = new Litepicker({
+						element: document.getElementById('datePicker'),
+						format: i18n('Date'),
+						lang: MainParser.Language,
+						singleMode: false,
+						maxDate: MainParser.getCurrentDate(),
+						showWeekNumbers: false,
+						autoRefresh: true,
+						repick: true,
+						startDate: Stats.timeSpan.start,
+						endDate: moment(Stats.timeSpan.end).subtract(1, 'days').toDate(),
+						onSelect: async function (start, end) {
+							$('#datePicker').text(`${start} - ${end}`);
+							Stats.setTimeSpan(start, end);
+							console.log(Stats.timeSpan);
+							Stats.state.period = null;
+							$('.option-2-period .btn-tight').removeClass('btn-green');
+	
+							Stats.updateCharts(datePickerEnabled);
+						}
+					});
+				} else {
+					let datePickerEnabled = true;
+					Stats.DatePickerObj = new Litepicker({
+						element: document.getElementById('datePicker'),
+						format: i18n('Date'),
+						lang: MainParser.Language,
+						singleMode: false,
+						maxDate: MainParser.getCurrentDate(),
+						showWeekNumbers: false,
+						autoRefresh: true,
+						onSelect: async function (start, end) {
+							$('#datePicker').text(`${start} - ${end}`);
+							Stats.setTimeSpan(start, end);
+							console.log(Stats.timeSpan);
+							Stats.state.period = null;
+							$('.option-2-period .btn-tight').removeClass('btn-green');
+	
+							Stats.updateCharts(datePickerEnabled);
+						}
+					});
+				}
 			}
-			else {
-				Stats.DatePickerObj = null;
-            }
 			
 		});
 	},
@@ -571,7 +591,7 @@ let Stats = {
 			value: it,
 		}));
 
-		btnsPeriodSelect.push(`<input class="game-cursor" id="datePicker" type="text" value="${Stats.timeSpan.start}">`);
+		btnsPeriodSelect.push(`<input class="game-cursor" id="datePicker" type="text">`);
 
 		return `<div class="option-2-period">
 					${btnsPeriodSelect.join('')}
