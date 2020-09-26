@@ -1,5 +1,73 @@
 ## Changelog - Extension
 
+##### 2.5.2.3
+
+**Update**
+- Motivieren/Polieren:
+    - Übermittlung an foe-rechner.de überarbeitet
+
+---
+
+##### 2.5.2.2
+
+**Update**
+- Event/Schrittrechner:
+    - [#1592](https://github.com/dsiekiera/foe-helfer-extension/issues/1592) Einstellung zum deaktivieren der Box hinzugefügt
+
+- Gefechtsassistent:
+    - Ab sofort wird auch einen Warnung ausgegeben wenn eine seltene Einheit des nächsten ZAs gestorben ist => Möglichkeit zu heilen
+
+**BugFix**
+- Eigenanteilsrechner:
+    - [#1586](https://github.com/dsiekiera/foe-helfer-extension/issues/1586) Beim Ändern von Archefaktor oder externen Werten sprang der EA-Rechner auf das aktuelle Level zurück, falls zu einem höheren Level weitergescrollt wurde
+    - [#1588](https://github.com/dsiekiera/foe-helfer-extension/issues/1588) EA Rechner ludt nicht bzw. aktualisierte sich, wenn externe Spalten befüllt wurden
+
+- Legendäre Bauwerke:
+    - [#1587](https://github.com/dsiekiera/foe-helfer-extension/issues/1587) LG-Investitionen Innovation Tower waren unterhalb von Level 10 verrutscht
+
+- Forgepunkte Balken:
+    - [#1589](https://github.com/dsiekiera/foe-helfer-extension/issues/1589) FP-Counter in GG zählte nicht hoch
+
+- Notizen:
+    - fehlenden "Speicher"-Button ergänzt
+
+---
+##### 2.5.2.1
+
+**Neu**
+- Gildenchat:
+    - überarbeitet und mit verschiedenen "Räumen"
+
+**Update**
+- Tavernenbadge:
+    - entfernt da es Inno nachgebaut hat
+
+- Kostenrechner:
+    - [#1504](https://github.com/dsiekiera/foe-helfer-extension/issues/1504) Redesign der "Kopieren" Funktion, Scheme ist ab sofort selber einstellbar
+
+- Legendäre Bauwerke:
+    - [#1518](https://github.com/dsiekiera/foe-helfer-extension/issues/1518) der erforderliche Platz Faktor kann ab sofort geändert werden
+    - [#1574](https://github.com/dsiekiera/foe-helfer-extension/issues/1574) Unterstützung für blaue Galaxie hinzugefügt
+
+- Infobox:
+    - [#1542](https://github.com/dsiekiera/foe-helfer-extension/issues/1542) "Willkommenstext" kann mit "Box leeren" entfernt werden
+
+**BugFix**
+- Statistiken:
+    - [#1522](https://github.com/dsiekiera/foe-helfer-extension/issues/1522) [#1568](https://github.com/dsiekiera/foe-helfer-extension/issues/1568) beim wechsel zwischen Außenposten und Stadt gab es einen Knick in der Statistik
+
+- Marktplatz Filter:
+    - [#1541](https://github.com/dsiekiera/foe-helfer-extension/issues/1541) hat man den Filter manuell geöffnet, wurde er nicht geöffnet
+    - [#1543](https://github.com/dsiekiera/foe-helfer-extension/issues/1543) "fair bei niedrigem Lagerstand" wurde korrigiert
+    
+- Gildengefechte:
+    - [#1547](https://github.com/dsiekiera/foe-helfer-extension/issues/1547) Tabellenkopf wurde überarbeitet
+    
+- Legendäre Bauwerke:
+    - [#1567](https://github.com/dsiekiera/foe-helfer-extension/issues/1567) LG wurden dauerhauft ausgeblendet wenn die Güterkosten zu hoch waren
+
+---
+
 ##### 2.5.2.0
 
 **Neu**

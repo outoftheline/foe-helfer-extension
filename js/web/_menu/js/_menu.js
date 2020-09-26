@@ -902,7 +902,7 @@ let _menu = {
 	 *
 	 * @returns {*|jQuery}
 	 */
-	/* @TODO chat_Btn: () => {
+	chat_Btn: () => {
 
 		let btn = $('<div />').attr({ 'id': 'chat-Btn', 'data-slug': 'chat' }).addClass('hud-btn');
 		
@@ -920,14 +920,15 @@ let _menu = {
 				player: ExtPlayerID,
 				name: ExtPlayerName,
 				guild: ExtGuildID,
-				world: ExtWorld
+				world: ExtWorld,
+				lang: MainParser.Language
 			});
 		});
 
 		btn.append(btn_sp);
 
 		return btn;
-	},*/
+	},
 
 	/**
 	 * Set Übersicht
