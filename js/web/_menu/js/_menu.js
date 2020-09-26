@@ -527,10 +527,18 @@ let _menu = {
 		if (StoredItems !== null && _menu.isDraggable) {
 			StoredItems = JSON.parse(StoredItems);
 			let item = StoredItems.find(obj => obj.slug === slug);
-			elem.css({
-				'top': item.posY,
-				'left': item.posX
-			});
+			if (item != undefined) {
+				elem.css({
+					'top': item.posY,
+					'left': item.posX
+				});
+			}
+			else {
+				elem.css({
+					'top': '31px',
+					'left': '200px'
+				});
+			}
 		}
 
 		return elem;
@@ -554,7 +562,7 @@ let _menu = {
 		let btn_Calc = $('<span />');
 
 		btn_Calc.bind('click', function () {
-			if (Calculator.CityMapEntity) {
+			if (Calculator.CityMapEntity && !btn_Calc.hasClass('is--dragging')) {
 				Calculator.Show();
 			}
 		});
