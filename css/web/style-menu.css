@@ -347,6 +347,17 @@ p {
 	font-weight: 400;
 }
 
+#foe-helper-hud.draggable-wrapper {
+	position: absolute;
+	left: 0;
+	right: unset;
+	z-index: 150;
+	width: auto;
+	height: auto;
+	top: 0;
+	padding: 0;
+}
+
 #foe-helper-hud::before,
 #foe-helper-hud::after,
 .hud-btn:not(.ui-draggable),
@@ -474,8 +485,7 @@ p {
 }
 
 .hud-btn.hud-btn-red.ui-draggable {
-	background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('../images/hud/box-bg.png') 0 0 no-repeat;
-	filter: grayscale(50%);
+	background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('../images/hud/box-bg.png') 0 0 no-repeat;
 }
 
 .hud-btn span:first-child {
@@ -488,7 +498,7 @@ p {
 }
 
 .hud-btn.hud-btn-red.ui-draggable span:first-child {
-	filter: contrast(150%) grayscale(90%);
+	filter: contrast(120%) grayscale(70%) brightness(80%);
 }
 
 .menu-placeholder {

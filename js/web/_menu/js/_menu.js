@@ -305,7 +305,6 @@ let _menu = {
 		// Menüpunkte einbinden
 		// new format
 		_menu.Items.forEach(function(item, index) {
-			console.log(item);
 			item = {
 				'slug': item,
 				'posX': item.posX || 0,
@@ -547,7 +546,27 @@ let _menu = {
 				'left': item.posX
 			});
 		}
+		else {
+			_menu.InitDraggableMenu(elem);		
+		}
 		return elem;
+	},
+
+	InitDraggableMenu: (elem) => {
+		// todo: muss anders, die elemente sollten nebeneinander stehen
+		let StoredItems = JSON.parse(localStorage.getItem('MenuSort')),
+			slug = elem.attr('data-slug'), top = '36px', left = '32px';
+		StoredItems.forEach(function(item) {
+			let it = StoredItems.find(obj => obj.slug === slug);
+			if (it.posX === undefined) {
+				elem.css({
+					'top': top,
+					'left': left,
+				});
+				it.posX = left;
+				it.posY = top;
+			}
+		}); 
 	},
 
 	/*----------------------------------------------------------------------------------------------------------------*/
