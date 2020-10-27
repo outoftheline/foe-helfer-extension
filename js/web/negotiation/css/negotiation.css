@@ -15,8 +15,8 @@
 
 #negotiationBox {
 	top: 15%;
-	left: calc(50% + 10px);
-	width: 800px;
+	left: calc(50% + 15px);
+	width: 810px;
 	transform: translateX(-50%);
 }
 
@@ -37,11 +37,34 @@
 	width: 4em;
 	padding: 2px;
 	border-radius: 3px;
+	position: relative;
+}
+
+#negotiationBox #negotiationBoxBody .goods-sprite {
+	position: static;
+}
+
+#negotiationBox #negotiationBoxBody .goods-sprite.multiple {
+	position: relative;
+	min-width: 50px;
+	display: inline-block;
+}
+
+#negotiationBox #negotiationBoxBody .goods-sprite.cornered {
+	position: absolute;
+}
+
+#negotiationBox #negotiationBoxBody #good-sort .good .goods-sprite::before {
+	bottom: auto;
+}
+
+#negotiationBox #negotiationBoxBody #good-sort .good .goods-sprite::before {
+
 }
 
 #negotiationBox #negotiationBoxBody .goods-dragable .good:hover {
 	background-color: rgba(255,255,255, 0.33);
-	cursor: url('https://foede.innogamescdn.com/assets/shared/cursors/cursor_hover.cur'), auto;
+	cursor: url('../../../../css/images/cursor_hover.cur'), auto;
 }
 
 #negotiationBox #negotiationBoxBody #good-sort .good-drag {
@@ -174,21 +197,22 @@
 
 #negotiationBox .missmatch {
 	border: 5px solid red;
-	border-radius: 50%;
+	border-radius: 25%;
+	width: 3em;
 }
 
 #negotiationBox .cornered {
 	position: absolute;
-	top: 0;
-	right: 0;
+	top: -8px;
+	right: 26px;
 	display: none;
-	transform: scale(0.5) translate(50%,-50%);
+	transform: scale(0.5);
 }
 
-/*#negotiationBox .wrong-goods .cornered,*/
 #negotiationBox td .cornered.missmatch,
 #negotiationBox td:hover .cornered {
 	display: block;
 	border: none;
+	margin: auto;
 }
 

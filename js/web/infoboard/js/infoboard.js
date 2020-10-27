@@ -305,11 +305,6 @@ let Infoboard = {
     ResetBox: () => {
         $('#BackgroundInfo').on('click', '.btn-reset-box', function() {
             $('#BackgroundInfoTable tbody').html('');
-            Infoboard.PostMessage({
-                class: 'welcome',
-                type: i18n('Menu.Info.Title'),
-                msg: i18n('Boxes.Infobox.Messages.Welcome'),
-            });
         });
     }
 };
@@ -438,9 +433,7 @@ let Info = {
      */
     GuildBattlegroundService_getProvinces: (d) => {
 
-        if (GildFights.SortedColors === null){
-            GildFights.PrepareColors();
-        }
+    	GildFights.PrepareColors();
         
         let data = d[0];
 
