@@ -44,6 +44,8 @@ let _menu = {
 		'alerts',
 		'greatbuildings',
 		'market',
+		'bluegalaxy',
+		'moppelhelper',
 	],
 
 
@@ -581,8 +583,8 @@ let _menu = {
 		let btn_Calc = $('<span />');
 
 		btn_Calc.bind('click', function () {
-			if (Calculator.CityMapEntity && !btn_Calc.hasClass('is--dragging')) {
-				Calculator.Show();
+			if (Calculator.CityMapEntity) {
+				Calculator.Show('menu');
 			}
 		});
 
@@ -1023,6 +1025,51 @@ let _menu = {
 		});
 
 		btn.append(btn_Market);
+
+		return btn;
+	},
+
+	/**
+	 * Helfer Blaue Galaxie
+	 */
+	bluegalaxy_Btn: () => {
+		let OwnGalaxy = Object.values(MainParser.CityMapData).find(obj => (obj['cityentity_id'] === 'X_OceanicFuture_Landmark3'));;
+
+		// no BG => display none
+		if (!OwnGalaxy) return;
+
+		let btn = $('<div />').attr({ 'id': 'bluegalaxy-Btn', 'data-slug': 'bluegalaxy' }).addClass('hud-btn');
+
+		// Tooltip einbinden
+		_menu.toolTippBox(i18n('Menu.Bluegalaxy.Desc'), i18n('Menu.Bluegalaxy.Title'), 'bluegalaxy-Btn');
+
+		let btn_sp = $('<span />');
+
+		btn_sp.on('click', function () {
+			BlueGalaxy.Show();
+		});
+
+		btn.append(btn_sp);
+
+		return btn;
+	},
+
+	/**
+	 * Moppelassistent
+	 * */
+	moppelhelper_Btn: () => {
+		let btn = $('<div />').attr({ 'id': 'moppelhelper-Btn', 'data-slug': 'moppelhelper' }).addClass('hud-btn');
+
+		// Tooltip einbinden
+		_menu.toolTippBox(i18n('Menu.Moppelhelper.Desc'), i18n('Menu.Moppelhelper.Title'), 'moppelhelper-Btn');
+
+		let btn_sp = $('<span />');
+
+		btn_sp.on('click', function () {
+			EventHandler.ShowMoppelHelper();
+		});
+
+		btn.append(btn_sp);
 
 		return btn;
     }

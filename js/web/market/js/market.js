@@ -164,15 +164,15 @@ let Market = {
     CalcBody: () => {
         let h = [];
 
-        //Filters
+        // Filters
         h.push('<div class="dark-bg" style="margin-bottom: 3px;">');
         h.push('<table class="filters">');
         h.push('<thead>');
         h.push('<tr>');
         h.push('<th colspan="2"></td>');
-        h.push('<th>' + i18n('Boxes.Market.TradePartner') + '</th>');
-        h.push('<th>' + i18n('Boxes.Market.TradeForGoods') + '</th>');
-        h.push('<th>' + i18n('Boxes.Market.Rating') + '</th>');
+        h.push('<th class="text-left">' + i18n('Boxes.Market.TradePartner') + '</th>');
+        h.push('<th class="text-left">' + i18n('Boxes.Market.TradeForGoods') + '</th>');
+        h.push('<th class="text-left">' + i18n('Boxes.Market.Rating') + '</th>');
         h.push('</tr>');
         h.push('</thead>');
 
@@ -321,7 +321,7 @@ let Market = {
                 h.push('<td class="goods-image"><span class="goods-sprite-50 sm ' + GoodsData[Trade['need']['good_id']]['id'] +'"></span></td>'); 
                 h.push('<td><strong class="td-tooltip" title="' + NeedTT + '">' + GoodsData[Trade['need']['good_id']]['name'] + '</strong></td>');
                 h.push('<td><strong class="td-tooltip" title="' + NeedTT + '">' + Trade['need']['value'] + '</strong></td>');
-                h.push('<td class="text-center">' + HTML.Format(Math.round(Trade['offer']['value'] / Trade['need']['value'] * 100) / 100) + '</td>');
+                h.push('<td class="text-center">' + HTML.Format(MainParser.round(Trade['offer']['value'] / Trade['need']['value'] * 100) / 100) + '</td>');
                 h.push('<td>' + Trade['merchant']['name'] + '</td>');
                 h.push('<td class="text-center">' + (Math.floor(Pos / 10 + 1)) + '-' + (Pos % 10 + 1) + '</td>');
                 h.push('</tr>');

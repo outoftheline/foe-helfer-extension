@@ -189,6 +189,8 @@
 				'ws-chat',
 				'treasury',
 				'market',
+				'bluegalaxy',
+				'eventhandler',
 			];
 
 			// Scripte laden (nacheinander)

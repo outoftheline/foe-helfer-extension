@@ -13,6 +13,23 @@
  * **************************************************************************************
  */
 
+/*
+Integriert:
+- der Wert einer doppelten Ernte
+- diplomatische Geschenke / Kriegsbeute
+- Relikte in der GEX
+- die FPs zwischen den Kämpfen der GG
+- Tavernenbesuch
+
+Bitte testen:
+- geplünderte FP
+
+Fehlt noch:
+- Event-Quests Belohnungen
+- Tägliche Herausforderung
+- Schleifenquests (response von Yvi oder Andreas?)
+*/
+
 FoEproxy.addHandler('ResourceShopService', 'getContexts', (data)=> {
 	if (data['responseData']['0']['context'] !== 'forgePoints') {
 		return;
@@ -49,12 +66,173 @@ FoEproxy.addHandler('AnnouncementsService', 'fetchAllAnnouncements', (data, post
 	StrategyPoints.HideFPBar();
 });
 
+// FP Collector
+// - GG reward after fight [2,5,10]FP or
+// - diplomaticGift or spoilsOfWar
+FoEproxy.addHandler('RewardService', 'collectReward', (data, postData) => {
+
+	const d = data.responseData[0][0];
+
+	if(d['subType'] !== 'strategy_points'){
+		return;
+	}
+
+	StrategyPoints.insertIntoDB({
+		place: 'Guildfights',
+		event: ( data['responseData'][1] ? data['responseData'][1] : 'reward'),
+		amount: d['amount'],
+		date: moment(MainParser.getCurrentDate()).startOf('day').toDate()
+	});
+});
+
+// GEX FP from chest
+FoEproxy.addHandler('GuildExpeditionService', 'openChest', (data, postData) => {
+	const d = data['responseData'];
+
+	if(d['subType'] !== 'strategy_points'){
+		return;
+	}
+
+	StrategyPoints.insertIntoDB({
+		place: 'Guildexpedition',
+		event: 'chest',
+		amount: d['amount'],
+		date: moment(MainParser.getCurrentDate()).startOf('day').toDate()
+	});
+});
+
+// Visit other tavern
+FoEproxy.addHandler('FriendsTavernService', 'getOtherTavern', (data, postData) => {
+	const d = data['responseData'];
+
+	if(!d['rewardResources'] || !d['rewardResources']['resources'] || !d['rewardResources']['resources']['strategy_points']){
+		return;
+	}
+
+	StrategyPoints.insertIntoDB({
+		place: 'FriendsTavern',
+		event: 'satDown',
+		amount: d['rewardResources']['resources']['strategy_points'],
+		date: moment(MainParser.getCurrentDate()).startOf('day').toDate()
+	});
+});
+
+// double Collection by Blue Galaxy
+FoEproxy.addHandler('CityMapService', 'showEntityIcons', (data, postData) => {
+
+	if(data['responseData'][0]['type'] !== 'citymap_icon_double_collection'){
+		return;
+	}
+
+	StrategyPoints.pickupProductionId = data['responseData'][0]['id'];
+});
+
+
+FoEproxy.addHandler('OtherPlayerService', 'rewardPlunder', (data, postData) => {
+	for (let i = 0; i < data.responseData.length; i++) {
+		let PlunderReward = data.responseData[i];
+
+		if (PlunderReward['product'] && PlunderReward['product']['resources'] && PlunderReward['product']['resources']['strategy_points']) {
+			let PlunderedFP = PlunderReward['product']['resources']['strategy_points'];
+
+			StrategyPoints.insertIntoDB({
+				place: 'OtherPlayer',
+				event: 'plunderReward',
+				amount: PlunderedFP,
+				date: moment(MainParser.getCurrentDate()).startOf('day').toDate()
+			});
+        }
+    }
+});
+
+
+FoEproxy.addHandler('CityProductionService', 'pickupProduction', (data, postData) => {
+
+	if(!StrategyPoints.pickupProductionId){
+		return;
+	}
+
+	const pickUpID = StrategyPoints.pickupProductionId;
+	const d = data['responseData']['updatedEntities'];
+
+	for(let i in d)
+	{
+		if(!d.hasOwnProperty(i)) continue;
+
+		if(pickUpID !== d[i]['id']){
+			return ;
+		}
+
+		let id = d[i]['cityentity_id'],
+			name = MainParser.CityEntities[id]['name'],
+			amount;
+
+		// Eventbuildings
+		if(d[i]['type'] === 'residential')
+		{
+			// has this building forge points?
+			if(!d[i]['state']['current_product']['product']['resources']['strategy_points']){
+				return;
+			}
+
+			amount = d[i]['state']['current_product']['product']['resources']['strategy_points'];
+		}
+
+		// Production building like Terrace fields
+		else {
+			let level = d[i]['level'],
+				products = MainParser.CityEntities[id]['entity_levels'][level]['production_values'];
+
+			const product = Object.values(products).filter(f => f['type'] === 'strategy_points');
+
+			amount = product[0]['value'];
+		}
+
+		StrategyPoints.insertIntoDB({
+			place: 'pickupProduction',
+			event: 'double_collection',
+			notes: name,
+			amount: amount,
+			date: moment(MainParser.getCurrentDate()).startOf('day').toDate()
+		});
+	}
+
+	// reset
+	StrategyPoints.pickupProductionId = null;
+});
+
 /**
- * @type {{readonly AvailableFP: *|number, OldStrategyPoints: number, HandleWindowResize: StrategyPoints.HandleWindowResize, RefreshBuyableForgePoints: StrategyPoints.RefreshBuyableForgePoints, RefreshBar: StrategyPoints.RefreshBar, InventoryFP: number}}
+ * @type {{readonly AvailableFP: (*|number), ShowFPBar: (function(): (undefined)), HideFPBar: StrategyPoints.HideFPBar, OldStrategyPoints: number, checkForDB: (function(*): Promise<void>), pickupProductionId: null, pickupProductionBuilding: null, HandleWindowResize: StrategyPoints.HandleWindowResize, insertIntoDB: (function(*=): Promise<void>), RefreshBuyableForgePoints: StrategyPoints.RefreshBuyableForgePoints, RefreshBar: (function(*=): (undefined)), InventoryFP: number, db: null}}
  */
 let StrategyPoints = {
 	OldStrategyPoints: 0,
 	InventoryFP: 0,
+
+	pickupProductionId: null,
+	pickupProductionBuilding: null,
+
+	db: null,
+
+	/**
+	 *
+	 * @returns {Promise<void>}
+	 */
+	checkForDB: async (playerID)=> {
+		const FP_DBName = `FoeHelperDB_FPCollector_${playerID}`;
+
+		StrategyPoints.db = new Dexie(FP_DBName);
+
+		StrategyPoints.db.version(1).stores({
+			ForgePointsStats: '++id,place,event,notes,amount,date'
+		});
+
+		StrategyPoints.db.open();
+	},
+
+
+	insertIntoDB: async (data)=>  {
+		await StrategyPoints.db.ForgePointsStats.put(data);
+	},
 
 
 	/**
