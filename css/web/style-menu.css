@@ -472,12 +472,10 @@ p {
 }
 
 .hud-btn.ui-draggable {
-	width: 31px;
-	height: 31px;
+	width: 30px;
+	height: 30px;
 	position: absolute;
-	background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url('../images/hud/box-bg.png') 0 0 no-repeat;
-	border-left: 1px solid transparent;
-	border-bottom: 1px solid transparent;
+	background: linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.1)), url('../images/hud/box-bg.png') 0 0 no-repeat;
 }
 
 .hud-btn.hud-btn-red {
@@ -485,7 +483,7 @@ p {
 }
 
 .hud-btn.hud-btn-red.ui-draggable {
-	background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('../images/hud/box-bg.png') 0 0 no-repeat;
+	background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.3)), url('../images/hud/box-bg.png') 0 0 no-repeat;
 }
 
 .hud-btn span:first-child {
