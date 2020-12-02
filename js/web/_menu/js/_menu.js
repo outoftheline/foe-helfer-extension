@@ -526,6 +526,7 @@ let _menu = {
 
 	addPosToBtn:(elem) => {
 		let StoredItems = localStorage.getItem('MenuPosition'),
+			StoredMenu = localStorage.getItem('MenuSort'),
 			slug = elem.attr('data-slug');
 
 		if (StoredItems !== null && _menu.isDraggable) {
@@ -545,6 +546,7 @@ let _menu = {
 			}
 		}
 		else {
+			if (StoredMenu !== null)
 			_menu.InitDraggableMenu(elem);		
 		}
 		return elem;
@@ -554,19 +556,19 @@ let _menu = {
 		// todo: muss anders, die elemente sollten nebeneinander stehen
 		let StoredItems = JSON.parse(localStorage.getItem('MenuSort')),
 			slug = elem.attr('data-slug'), top = '36px', left = '32px';
-		if (StoredItems != null) {
-			StoredItems.forEach(function(item) {
-				let it = StoredItems.find(obj => obj.slug === slug);
-				if (it.posX === undefined) {
-					elem.css({
-						'top': top,
-						'left': left,
-					});
-					it.posX = left;
-					it.posY = top;
-				}
-			}); 
-		}
+
+		StoredItems.forEach(function(item) {
+			let it = StoredItems.find(item => item === slug);
+			console.log(it, slug);
+			if (it !== undefined && it.posX === undefined) {
+				elem.css({
+					'top': top,
+					'left': left,
+				});
+				it.posX = left;
+				it.posY = top;
+			}
+		}); 
 	},
 
 	/*----------------------------------------------------------------------------------------------------------------*/
