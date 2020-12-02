@@ -2,18 +2,17 @@
  * Messy code has these issues:
  * - GvG Annotations do not work anymore
  * - "today" is not displaying hourly
- * - GBG does not work with the DatePicker
+ * - GBG does not work with the DatePicker (does it, though?)
  * - Grouped Eras do not work with DatePicker
  * - tbc. (didn't find more, but there will be)
 */
 
-// Guild Battlegrounds leader board log
-// Gildengefechte
+// GBG leader board log
 FoEproxy.addHandler('GuildBattlegroundService', 'getPlayerLeaderboard', async (data, postData) => {
 	Stats.HandlePlayerLeaderboard(data.responseData);
 });
 
-// Gildengefechte
+// GBG
 FoEproxy.addHandler('GuildBattlegroundStateService', 'getState', async (data, postData) => {
 	if (data.responseData['stateId'] !== 'participating') {
 		Stats.HandlePlayerLeaderboard(data.responseData['playerLeaderboardEntries']);
@@ -56,7 +55,7 @@ FoEproxy.addHandler('RewardService', 'collectReward', async (data, postData) => 
 	}
 });
 
-// Player treasure log
+// Player treasury log
 FoEproxy.addHandler('ResourceService', 'getPlayerResources', async (data, postData) => {
 	const r = data.responseData;
 	if (!r.resources) {
@@ -859,6 +858,7 @@ let Stats = {
 	 * @returns {Promise<{series: {data, name: *}[]}>}
 	 */
 	createTreasureGroupByEraSeries: async (datePicker = true) => {
+		console.log('datepicker',datePicker);
 		const source = Stats.state.source;
 		let data = await IndexDB.db[source].orderBy('date').toArray();
 		if (datePicker) {
@@ -870,6 +870,8 @@ let Stats = {
 		}
 
 		const series = Stats.getSelectedEras().map(era => {
+			
+			console.log(+date);
 			return {
 				name: i18n('Eras.' + Technologies.Eras[era]),
 				// Group by era's resources
