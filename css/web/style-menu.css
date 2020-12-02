@@ -499,9 +499,6 @@ p {
 
 .hud-btn.hud-btn-red.ui-draggable span:first-child {
 	filter: contrast(120%) grayscale(70%) brightness(80%);
-	position: absolute;
-	top: 8px;
-	left: 9px;
 }
 
 .menu-placeholder {

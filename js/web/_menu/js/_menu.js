@@ -309,7 +309,8 @@ let _menu = {
 		storedItems = JSON.parse(StoredItems);
 
 		$('#foe-helper-hud .hud-btn').each(function(index) {
-			if (storedItems[index].posX === undefined) {
+			console.log(storedItems[index]);
+			if (storedItems[index] != undefined && storedItems[index].posX === undefined) {
 				let left = 360+32*index, top = 34;
 				$(this).css({
 					'left': left+'px',
@@ -1012,7 +1013,8 @@ let _menu = {
 	market_Btn: () => {
 		let btn = $('<div />').attr({ 'id': 'market-Btn', 'data-slug': 'market' }).addClass('hud-btn hud-btn-red');
 		
-		btn = _menu.addPosToBtn(btn);
+		if (_menu.isDraggable)
+			btn = _menu.addPosToBtn(btn);
 
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Market.Title'), '<em id="market-Btn-closed" class="tooltip-error">' + i18n('Menu.Market.Warning') + '<br></em>' + i18n('Menu.Market.Desc'), 'market-Btn');
@@ -1041,6 +1043,9 @@ let _menu = {
 
 		let btn = $('<div />').attr({ 'id': 'bluegalaxy-Btn', 'data-slug': 'bluegalaxy' }).addClass('hud-btn');
 
+		if (_menu.isDraggable)
+			btn = _menu.addPosToBtn(btn);
+
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Bluegalaxy.Title'), i18n('Menu.Bluegalaxy.Desc'), 'bluegalaxy-Btn');
 
@@ -1061,6 +1066,9 @@ let _menu = {
 	moppelhelper_Btn: () => {
 		let btn = $('<div />').attr({ 'id': 'moppelhelper-Btn', 'data-slug': 'moppelhelper' }).addClass('hud-btn');
 
+		if (_menu.isDraggable)
+			btn = _menu.addPosToBtn(btn);
+
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.Moppelhelper.Title'), i18n('Menu.Moppelhelper.Desc'), 'moppelhelper-Btn');
 
@@ -1080,6 +1088,9 @@ let _menu = {
 	 */
 	fpCollector_Btn: () => {
 		let btn = $('<div />').attr({ 'id': 'fpCollector-Btn', 'data-slug': 'fpCollector' }).addClass('hud-btn');
+
+		if (_menu.isDraggable)
+			btn = _menu.addPosToBtn(btn);
 
 		// Tooltip einbinden
 		_menu.toolTippBox(i18n('Menu.fpCollector.Title'), i18n('Menu.fpCollector.Desc'), 'fpCollector-Btn');
