@@ -554,17 +554,19 @@ let _menu = {
 		// todo: muss anders, die elemente sollten nebeneinander stehen
 		let StoredItems = JSON.parse(localStorage.getItem('MenuSort')),
 			slug = elem.attr('data-slug'), top = '36px', left = '32px';
-		StoredItems.forEach(function(item) {
-			let it = StoredItems.find(obj => obj.slug === slug);
-			if (it.posX === undefined) {
-				elem.css({
-					'top': top,
-					'left': left,
-				});
-				it.posX = left;
-				it.posY = top;
-			}
-		}); 
+		if (StoredItems != null) {
+			StoredItems.forEach(function(item) {
+				let it = StoredItems.find(obj => obj.slug === slug);
+				if (it.posX === undefined) {
+					elem.css({
+						'top': top,
+						'left': left,
+					});
+					it.posX = left;
+					it.posY = top;
+				}
+			}); 
+		}
 	},
 
 	/*----------------------------------------------------------------------------------------------------------------*/
