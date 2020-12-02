@@ -8,36 +8,16 @@
 */
 
 // Guild Battlegrounds leader board log
+// Gildengefechte
 FoEproxy.addHandler('GuildBattlegroundService', 'getPlayerLeaderboard', async (data, postData) => {
-	const r = data.responseData;
-	if (!Array.isArray(r)) {
-		return;
+	Stats.HandlePlayerLeaderboard(data.responseData);
+});
+
+// Gildengefechte
+FoEproxy.addHandler('GuildBattlegroundStateService', 'getState', async (data, postData) => {
+	if (data.responseData['stateId'] !== 'participating') {
+		Stats.HandlePlayerLeaderboard(data.responseData['playerLeaderboardEntries']);
 	}
-	const players = r.reduce((acc, it) => {
-		acc[it.player.player_id] = {
-			id: it.player.player_id,
-			n: it.negotiationsWon || 0,
-			b: it.battlesWon || 0,
-			r: it.rank || 1
-		};
-		return acc;
-	}, {});
-	const timeNow = MainParser.getCurrentDate();
-
-    await IndexDB.getDB();
-
-    await IndexDB.db.statsGBGPlayers.add({
-		date: timeNow,
-		players
-	});
-
-	const playersForCache = r.map(({player}) => ({
-		id: player.player_id,
-		name: player.name,
-		avatar: player.avatar,
-		date: timeNow
-	}));
-	await IndexDB.db.statsGBGPlayerCache.bulkPut(playersForCache);
 });
 
 // Reward log
@@ -52,7 +32,7 @@ FoEproxy.addHandler('RewardService', 'collectReward', async (data, postData) => 
 
 	for (let reward of rewards) {
 		// default is incident reward
-		if (rewardIncidentSource == 'default') {
+		if (rewardIncidentSource === 'default') {
 			continue;
 		}
 
@@ -65,6 +45,7 @@ FoEproxy.addHandler('RewardService', 'collectReward', async (data, postData) => 
 			delete reward.__class__;
 			await IndexDB.db.statsRewardTypes.put(reward);
 		}
+
 		// Add reward incident record
 		await IndexDB.db.statsRewards.add({
 			date: MainParser.getCurrentDate(),
@@ -119,10 +100,11 @@ FoEproxy.addHandler('ClanService', 'getTreasury', async (data, postData) => {
 
 // Player Army log
 FoEproxy.addHandler('ArmyUnitManagementService', 'getArmyInfo', async (data, postData) => {
-	const r = data.responseData;
-	if (Stats.isVisitingCulturalOutpost) {
+	if (ActiveMap !== 'main') {
 		return;
 	}
+
+	const r = data.responseData;
 
 	// Convert array to hash to be more compact
 	const army = r.counts.reduce((acc, val) => {
@@ -143,18 +125,10 @@ FoEproxy.addHandler('ArmyUnitManagementService', 'getArmyInfo', async (data, pos
 	});
 });
 
-FoEproxy.addHandler('CityMapService', 'getCityMap', async (data, postData) => {
-	const r = data.responseData;
-	if (r.gridId == 'cultural_outpost') {
-		Stats.isVisitingCulturalOutpost = true;
-	}
-});
 
-FoEproxy.addHandler('CityMapService', 'getEntities', async (data, postData) => {
-	const r = data.responseData;
-	Stats.isVisitingCulturalOutpost = false;
-});
-
+/**
+ * @type {{RenderOptions: (function(): string), isSelectedUnitSources: (function(): boolean), DatePickerObj: null, applyDeltaToSeriesIfNeed: (function({series: *, [p: string]: *}): {series: *, chartType: string}), shortEraName: (function(*): (void|string|*)), Render: (function(): Promise<void>), RenderButton: (function({name: *, isActive?: *, dataType: *, value: *, title?: *, disabled?: *}): string), updateCharts: (function(): Promise<void>), getSelectedEras: (function(): string[]), updateOptions: Stats.updateOptions, treasureSources: [string, string, string, string], createUnitsSeries: (function(): Promise<{series, pointFormat: string, footerFormat: string}>), loadHighcharts: (function(): Promise<void>), RemoveTable: Stats.RemoveTable, createTreasureSeries: (function(): Promise<{series, pointFormat: string, colors: *[], footerFormat: string}>), ResMap: {NoAge: [string, string, string, string, string], StoneAge: [], PostModernEra: [string, string, string, string, string], ContemporaryEra: [string, string, string, string, string], TomorrowEra: [string, string, string, string, string], ArcticFuture: [string, string, string, string, string], IronAge: [string, string, string, string, string], ModernEra: [string, string, string, string, string], OceanicFuture: [string, string, string, string, string], SpaceAgeAsteroidBelt: [string, string, string, string, string], SpaceAgeVenus: [], special: [string, string, string, string], LateMiddleAge: [string, string, string, string, string], EarlyMiddleAge: [string, string, string, string, string], VirtualFuture: [string, string, string, string, string], SpaceAgeMars: [string, string, string, string, string], BronzeAge: [string, string, string, string, string], IndustrialAge: [string, string, string, string, string], ProgressiveEra: [string, string, string, string, string], HighMiddleAge: [string, string, string, string, string], ColonialAge: [string, string, string, string, string], FutureEra: [string, string, string, string, string]}, RenderCheckbox: (function({name: *, isActive: *, dataType: *, value: *}): string), state: {eras: {}, showAnnotations: boolean, period: string, currentType: null, chartType: string, rewardSource: string, eraSelectOpen: boolean, source: string, isGroupByEra: boolean}, createRewardSeries: (function(): Promise<{series: {data: this, name: string}[], title: string}>), isVisitingCulturalOutpost: boolean, isSelectedGBGSources: (function(): boolean), gbgSources: [string], promisedLoadCode: (function(*=): Promise<unknown>), createGBGSeries: (function(*=): Promise<{series: {data, avatarUrl: (string), name: string}[], pointFormat: string}>), createTreasureGroupByEraSeries: (function(): Promise<{series: {data, name: *}[]}>), RenderTab: (function({name: *, isActive?: *, dataType: *, value: *, title?: *, disabled?: *}): string), kilos: (function(*=): string), HandlePlayerLeaderboard: (function(*=): Promise<undefined>), isSelectedTreasureSources: (function(): boolean), RenderBox: (function({name: *, isActive: *, disabled: *, dataType: *, value: *}): string), getAnnotations: (function(): Promise<{xAxisPlotLines: {color: string, dashStyle: string, width: number, value: *}[], annotations: {useHTML: boolean, labelOptions: {verticalAlign: string, backgroundColor: string, y: number, style: {fontSize: string}}, labels: {text: string, point: {xAxis: number, x: *, y: number}}[]}[]}>), updateCommonChart: (function({series: *, colors?: *, pointFormat?: *, footerFormat?: *, chartType?: *}): Promise<void>), RenderSecondaryOptions: (function(): string), PlayableEras: string[], unitSources: [string, string], equals: (function(*=, *=): boolean), isSelectedRewardSources: (function(): boolean), Show: Stats.Show, RenderEraSwitchers: (function(): string), updateRewardCharts: Stats.updateRewardCharts, rewardSources: [string]}}
+ */
 let Stats = {
 
 	isVisitingCulturalOutpost: false,
@@ -235,6 +209,7 @@ let Stats = {
 	isSelectedRewardSources: () => Stats.rewardSources.includes(Stats.state.source),
 	isSelectedGBGSources: () => Stats.gbgSources.includes(Stats.state.source),
 
+
 	/**
 	 * Show Box
 	 */
@@ -243,6 +218,7 @@ let Stats = {
 			let args = {
 				'id': 'stats',
 				'title': i18n('Boxes.Stats.Title'),
+				'ask': i18n('Boxes.Stats.HelpLink'),
 				'auto_close': true,
 				'dragdrop': true,
 				'minimize': true
@@ -699,6 +675,7 @@ let Stats = {
 	 */
 	RenderButton: ({ name, isActive, dataType, value, title, disabled }) => `<button ${disabled ? 'disabled' : ''} class="btn btn-default btn-tight${!disabled && isActive ? ' btn-green' : ''}" data-type="${dataType}" data-value="${value}" title="${(title || '').replace(/"/g,'&quot;')}">${name}</button>`,
 
+
 	/**
 	 * Render a tab
 	 *
@@ -961,7 +938,7 @@ let Stats = {
 			colors,
 			pointFormat: `<tr>
 								<td>
-									<span class="goods-sprite {series.options.goodsId}"></span>
+									<span class="goods-sprite-50 {series.options.goodsId}"></span>
 								</td>
 								<td>
 									<span style="margin: 0 5px;"><span style="color:{point.color}">●</span> {series.name}: </span>
@@ -1111,7 +1088,7 @@ let Stats = {
 		// Highchart's line for highlight GvG
 		const xAxisPlotLines = gvgDates.map(([it, eras]) => ({
 			dashStyle: 'Dot',
-			color: '#FF0000',
+			color: '#b20000',
 			width: 1,
 			value: it
 		}));
@@ -1438,4 +1415,37 @@ let Stats = {
 			});
 		}
 	},
+
+
+	/* Handlers */
+	HandlePlayerLeaderboard: async (r) => {
+		if (!Array.isArray(r)) {
+			return;
+		}
+		const players = r.reduce((acc, it) => {
+			acc[it.player.player_id] = {
+				id: it.player.player_id,
+				n: it.negotiationsWon || 0,
+				b: it.battlesWon || 0,
+				r: it.rank || 1
+			};
+			return acc;
+		}, {});
+		const timeNow = MainParser.getCurrentDate();
+
+		await IndexDB.getDB();
+
+		await IndexDB.db.statsGBGPlayers.add({
+			date: timeNow,
+			players
+		});
+
+		const playersForCache = r.map(({ player }) => ({
+			id: player.player_id,
+			name: player.name,
+			avatar: player.avatar,
+			date: timeNow
+		}));
+		await IndexDB.db.statsGBGPlayerCache.bulkPut(playersForCache);		
+    },
 };

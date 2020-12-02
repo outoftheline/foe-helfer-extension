@@ -13,14 +13,26 @@
  */
 
 /**
- *
- * @type {{init: Notice.init, notes: null, Listener: Notice.Listener, SetHeights: Notice.SetHeights, buildBox: Notice.buildBox, BuildSettingButtons: Notice.BuildSettingButtons, prepareContent: Notice.prepareContent, ShowModal: Notice.ShowModal, SaveContent: Notice.SaveContent, EditMode: boolean, SaveModal: Notice.SaveModal, SaveItemModal: Notice.SaveItemModal, DeleteElement: Notice.DeleteElement}}
+ * @type {{ActualGrp: number, init: Notice.init, notes: null, Listener: Notice.Listener, SetHeights: Notice.SetHeights, buildBox: Notice.buildBox, BuildSettingButtons: Notice.BuildSettingButtons, prepareContent: Notice.prepareContent, ActiveTab: number, ShowModal: Notice.ShowModal, ShowPlayerModal: Notice.ShowPlayerModal, SavePlayerToGroup: (function(*): (undefined)), SaveContent: Notice.SaveContent, EditMode: boolean, SaveModal: (function(*=, *=): (undefined)), SaveItemModal: (function(*=): (undefined)), DeleteElement: Notice.DeleteElement, ActiveSubTab: number, Players: {}}}
  */
 let Notice = {
 
 	notes: null,
+	
+	/**
+	 * Toogle state for edit mode
+	 */
 	EditMode: false,
 
+	/**
+	 * Object for player picker
+	 */
+	Players: {},
+
+	ActualGrp: 0,
+
+	ActiveTab: 1,
+	ActiveSubTab: 1,
 
 	/**
 	 * On init get the content
@@ -63,6 +75,8 @@ let Notice = {
 			Notice.Listener();
 		}
 
+		Notice.Players = PlayerDict;
+
 		if(Settings.GetSetting('GlobalSend')){
 			Notice.prepareContent();
 		}
@@ -92,9 +106,21 @@ let Notice = {
 				const n = Notice.notes[i];
 				let subtab = [],
 					subdiv = [],
-					subcontent;
+					subcontent,
+					tabName;
 
-				tab.push(`<li><a href="#tab-${n['id']}" data-id="${n['id']}"><span>${n['group_name']}</span></a></li>`);
+				if(n['player_group']){
+					switch (n['player_group']){
+						case 'guild': tabName = `🛡 ${i18n('Boxes.Notice.SelectPlayerGroupGuild')}`; break;
+						case 'friend': tabName = `👩🏼‍🤝‍🧑 ${i18n('Boxes.Notice.SelectPlayerGroupFriend')}`; break;
+						case 'neighbor': tabName = `⚔ ${i18n('Boxes.Notice.SelectPlayerGroupNeighbor')}`; break;
+					}
+
+				} else {
+					tabName = n['group_name'];
+				}
+
+				tab.push(`<li><a href="#tab-${n['id']}" data-id="${n['id']}"><span>${tabName}</span></a></li>`);
 
 				for(let x in n['items']){
 
@@ -104,15 +130,40 @@ let Notice = {
 
 					subtab.push(`<li><a href="#subtab-${itm['id']}" data-id="${itm['id']}" title="${itm['tab']}"><span>${itm['tab']}</span></a></li>`);
 
-					subdiv.push(`<div id='subtab-${itm['id']}' class="sub-tab" spellcheck="false" data-parent="${n['id']}" data-id="${itm['id']}">
-									<div class="content-head" contenteditable="true">${(itm['title'] === '' ? i18n('Boxes.Notice.DummyHeading') : itm['title'])}</div>
-									<div class="content-text" contenteditable="true">${itm['content']}</div>
+					subdiv.push(`<div id='subtab-${itm['id']}' class="sub-tab" spellcheck="false" data-parent="${n['id']}" data-id="${itm['id']}">`);
+
+					if(itm['player_data']){
+						const player = JSON.parse(itm['player_data']);
+
+						subdiv.push(`<div class="content-head-player">
+										<span class="avatar" style="background-image:url('${MainParser.InnoCDN + 'assets/shared/avatars/' + MainParser.PlayerPortraits[ player['Avatar'] ]}.jpg')"></span>
+										<div class="text">
+											<span class="name">${player['PlayerName']}</span>
+											<span class="clan-name"><em>#${player['PlayerID']}</em> ${player['ClanName'] ? '[' + player['ClanName'] + ']' : '&nbsp;'}</span>
+										</div>
+										<div class="info-text">
+											${i18n('Boxes.Notice.ContentHeadIsGuild')}: ${player['IsGuildMember']}<br>
+											${i18n('Boxes.Notice.ContentHeadIsFriend')}: ${player['IsFriend']}<br>
+											${i18n('Boxes.Notice.ContentHeadIsNeighbor')}: ${player['IsFriend']}<br>
+										</div>
+									</div>`);
+
+					} else {
+						subdiv.push(`<div class="content-head" contenteditable="true">${(itm['title'] === '' ? i18n('Boxes.Notice.DummyHeading') : itm['title'])}</div>`)
+					}
+
+
+					subdiv.push(`<div class="content-text" contenteditable="true">${itm['content']}</div>
 								</div>`);
 				}
 
 				subcontent = `<div class='tabs-sub'>`;
 
-				subcontent += 	`<span class="btn-default itm-btn" data-id="new">+ ${i18n('Boxes.Notice.NewSide')}</span>`;
+				if(n['player_group']){
+					subcontent += 	`<span class="btn-default itm-btn" data-id="${n['player_group']}" data-group="${n['id']}">+ ${i18n('Boxes.Notice.NewPlayer')}</span>`;
+				} else {
+					subcontent += 	`<span class="btn-default itm-btn" data-id="new">+ ${i18n('Boxes.Notice.NewSide')}</span>`;
+				}
 
 				if(subtab.length > 0){
 					subcontent += 	`<ul class='vertical'>${subtab.join('')}</ul>`;
@@ -147,12 +198,13 @@ let Notice = {
 		}
 
 
-
 		// wait for html in the DOM
 		$('#notices').find('#noticesBody').html(content).promise().done(function(){
 
 			// init Tabslet
-			$('.notices').tabslet();
+			$('.notices').tabslet({
+				active: Notice.ActiveTab
+			});
 
 			if( $('.tabs-sub').length > 0 ){
 				$('.tabs-sub').tabslet();
@@ -177,7 +229,14 @@ let Notice = {
 		});
 
 		$('#noticesBody').on('click', '.itm-btn', function(){
-			Notice.ShowModal('itm', $(this).data('id'));
+			const id = $(this).data('id');
+
+			if(id !== 'new'){
+				Notice.ShowPlayerModal(id, $(this).data('group'));
+
+			} else {
+				Notice.ShowModal('itm', id);
+			}
 		});
 
 		$('#noticesBody').on('click', '.tab-edit', function(){
@@ -192,8 +251,7 @@ let Notice = {
 			Notice.DeleteElement($(this).data('type'), $(this).data('id'));
 		});
 
-
-		$('body').on('click', '#notices-modalclose', function(){
+		$('body').on('click', '#notices-modalclose, #notices-modal-playersclose', function(){
 			$('.foe-helper-overlay').remove();
 		});
 
@@ -233,6 +291,10 @@ let Notice = {
 			}
 		});
 
+		$('body').on('click', '.custom-option-noticePlayers', function(){
+			Notice.SavePlayerToGroup($(this).data('value'));
+		});
+
 		// check if user changes the box size
 		let id;
 
@@ -248,10 +310,9 @@ let Notice = {
 	 *
 	 * @param type
 	 * @param id
-	 * @param action
 	 * @constructor
 	 */
-	ShowModal:(type, id, action = '')=> {
+	ShowModal:(type, id)=> {
 
 		let title = type === 'grp' ? i18n('Boxes.Notice.NewGroup') : i18n('Boxes.Notice.NewSide'),
 			txt;
@@ -282,6 +343,7 @@ let Notice = {
 		inp.attr({
 			type: 'text',
 			value: txt,
+			id: `${type}-input`,
 			placeholder: type === 'grp' ? i18n('Boxes.Notice.GroupName') : i18n('Boxes.Notice.SideName'),
 			class: `inp-${type}-name`
 		});
@@ -291,25 +353,15 @@ let Notice = {
 				class: `btn-default save-${type}-name`,
 				'data-id': id,
 				'data-type': type,
-				style: 'margin-left: 10px',
-
+				onclick: (type === 'itm' ? `Notice.SaveItemModal(${(id === 'new' ? "'new'" : id)})` : `Notice.SaveModal('${type}', ${(id === 'new' ? "'new'" : id)})`)
 			})
-			.text(i18n('Boxes.Notice.Save'));
+			.text(i18n('Boxes.Notice.Save'))
+			.wrap('<div class="text-right" />');
 
-		$('#notices-modalBody').append(inp, btn);
 
-		if(type === 'itm'){
+		$('#notices-modalBody').append(inp);
 
-			btn.attr({
-				onclick: `Notice.SaveItemModal(${(id === 'new' ? "'new'" : id)})`
-			});
-
-		} else {
-			btn.attr({
-				onclick: `Notice.SaveModal('${type}', ${(id === 'new' ? "'new'" : id)})`
-			});
-		}
-
+		
 		if(id !== 'new'){
 			let delBtn = $('<span />');
 
@@ -328,7 +380,7 @@ let Notice = {
 
 			$('#notices-modalBody').append(delBtn);
 
-		} else{
+		} else {
 			let sort = $('<input />').attr({
 				type: 'number',
 				class: `inp-${type}-sort`,
@@ -338,6 +390,32 @@ let Notice = {
 			sort.wrap('<div />').insertAfter(`.inp-${type}-name`);
 		}
 
+		if(type === 'grp' && id === 'new'){
+			$('#notices-modalBody').append(
+				$('<hr>'),
+				$('<p />').append(
+					$('<select />').attr({
+						id: 'player-grp',
+						style: 'display-none'
+					}).append(
+						$('<option />').attr({
+							'data-value': -1
+						}).text(i18n('Boxes.Notice.SelectPlayerGroupDefault')),
+						$('<option />').attr({
+							'data-value': 'guild'
+						}).text(i18n('Boxes.Notice.SelectPlayerGroupGuild')),
+						$('<option />').attr({
+							'data-value': 'friend'
+						}).text(i18n('Boxes.Notice.SelectPlayerGroupFriend')),
+						$('<option />').attr({
+							'data-value': 'neighbor'
+						}).text(i18n('Boxes.Notice.SelectPlayerGroupNeighbor')),
+					)
+				)
+			);
+		}
+
+		$('#notices-modalBody').append(btn);
 
 		$(`.inp-${type}-name`).focus();
 	},
@@ -352,17 +430,34 @@ let Notice = {
 	 */
 	SaveModal: (type, id)=> {
 		let nN = $(`.inp-${type}-name`).val(),
-			txt = nN.trim();
+			txt = nN.trim(),
+			data = {
+				id: id,
+				type: type
+			}
 
-		if(txt === ''){
+		if( $('#player-grp option:selected').data('value') !== -1 ){
+			data['player_group'] = $('#player-grp option:selected').data('value');
+
+		} else if(txt === ''){
 			return;
+
+		} else {
+			// filter <script> Tags
+			txt = MainParser.ClearText(txt);
+
+			data['name'] = txt;
 		}
 
-		// filter <script> Tags
-		txt = MainParser.ClearText(txt);
-
-		MainParser.send2Server({id:id,type:type,name:txt}, 'Notice/set', (resp)=>{
+		MainParser.send2Server(data, 'Notice/set', (resp)=>{
 			Notice.notes = resp['notice'];
+
+			if(id === 'new'){
+				Notice.ActiveTab = Notice.notes[Notice.notes.length -1];
+
+			} else {
+				Notice.ActiveTab = Notice.notes.findIndex(idx => (idx.id === id)) +1;
+			}
 
 			$('#notices-modal').fadeToggle('fast', function(){
 				$(this).remove();
@@ -397,6 +492,16 @@ let Notice = {
 		MainParser.send2Server({id:id,type:'itm',name:txt,grp:grp,sort:sortVal}, 'Notice/set', (resp)=>{
 			Notice.notes = resp['notice'];
 
+			const group = Notice.notes.find(e => (e.id === grp));
+			Notice.ActiveTab = Notice.notes.findIndex(idx => (idx.id === grp)) +1;
+
+			if(id === 'new'){
+				Notice.ActiveSubTab = group.items.length +1;
+
+			} else {
+				Notice.ActiveSubTab = group.items.findIndex(i => (i.id === id)) +1;
+			}
+
 			$('#notices-modal').fadeToggle('fast', function(){
 				$(this).remove();
 
@@ -429,6 +534,102 @@ let Notice = {
 
 			Notice.notes[grpIdx].items[itmIdx]['title'] = head;
 			Notice.notes[grpIdx].items[itmIdx]['content'] = cont;
+
+			Notice.ActiveTab = (grpIdx + 1);
+			Notice.ActiveSubTab = (itmIdx + 1);
+		});
+	},
+
+
+	ShowPlayerModal: (type, grp)=> {
+
+		Notice.ActualGrp = grp;
+
+		HTML.Box({
+			id: 'notices-modal-players',
+			title: i18n('Boxes.Notice.ModalChoosePlayer'),
+			auto_close: true,
+			dragdrop: true
+		});
+
+		$('body').prepend( $('<div class="foe-helper-overlay" />') );
+
+		const mapper = {
+			guild: 'IsGuildMember',
+			friend: 'IsFriend',
+			neighbor: 'IsNeighbor',
+		};
+
+		// remove self
+		delete Notice.Players[ExtPlayerID];
+
+		// find all players by tab-type ...
+		const playerObj = Object.values(Notice.Players).filter((v) => v[mapper[type]] === true);
+
+		// ... and sort by name
+		const players = helper.arr.multisort(playerObj, ['PlayerName'], ['ASC']);
+
+		let content = `<p>${i18n('Boxes.Notice.ModalMissingPlayers')}`;
+
+			content += `<div class="custom-select-wrapper">
+						<div class="custom-select">
+							<div class="custom-select__trigger">
+								<span class="trigger">${i18n('Boxes.Notice.ModalChoosePlayer')}</span>
+								<div class="arrow"></div>
+							</div>
+							<div class="custom-options" id="player-selector">`;
+
+		for (let i in players)
+		{
+			if(!players.hasOwnProperty(i)) { break; }
+
+			const p = players[i],
+				a = MainParser.InnoCDN + 'assets/shared/avatars/' + MainParser.PlayerPortraits[ p['Avatar'] ];
+
+			content += `<span class="custom-option custom-option-noticePlayers" data-value="${p['PlayerID']}"><span class="avatar" style="background-image:url('${a}.jpg')"></span>${p['PlayerName']}</span>`;
+		}
+
+		content +=		`</div>
+					</div>
+				</div>`;
+
+		$('#notices-modal-playersBody').html(content).promise().done(function(){
+			HTML.Dropdown();
+		});
+	},
+
+
+	SavePlayerToGroup: (id)=> {
+		const data = {
+			id: 'new',
+			type: 'itm',
+			name: PlayerDict[id]['PlayerName'],
+			grp: Notice.ActualGrp,
+			player: JSON.stringify(PlayerDict[id])
+		};
+
+		// check if not double
+		const group = Notice.notes.find(e => (e.id === Notice.ActualGrp));
+		const player = group.items.find(e => (e.tab === PlayerDict[id]['PlayerName']));
+
+		// Player is allways added
+		if(player){
+			return ;
+		}
+
+		// set the active Tab for reload
+		Notice.ActiveTab = Notice.notes.findIndex(idx => idx.id === Notice.ActualGrp) + 1;
+
+		MainParser.send2Server(data, 'Notice/set', (resp)=>{
+			Notice.notes = resp['notice'];
+
+			$('#notices-modal-players').fadeToggle('fast', function(){
+				$(this).remove();
+
+				$('.foe-helper-overlay').remove();
+			});
+
+			Notice.buildBox();
 		});
 	},
 
@@ -570,6 +771,6 @@ let Notice = {
 		$('ul.vertical').height(h  - 39);
 
 		// text
-		$('.content-text').height(h - 47);
+		$('.content-text').height(h - $('.content-text').prev().height());
 	},
 };

@@ -13,7 +13,24 @@
  * **************************************************************************************
  */
 
-FoEproxy.addHandler('ResourceShopService', 'getContexts', (data) => {
+/*
+Integriert:
+- der Wert einer doppelten Ernte
+- diplomatische Geschenke / Kriegsbeute
+- Relikte in der GEX
+- die FPs zwischen den Kämpfen der GG
+- Tavernenbesuch
+
+Bitte testen:
+- geplünderte FP
+
+Fehlt noch:
+- Event-Quests Belohnungen
+- Tägliche Herausforderung
+- Schleifenquests (response von Yvi oder Andreas?)
+*/
+
+FoEproxy.addHandler('ResourceShopService', 'getContexts', (data)=> {
 	if (data['responseData']['0']['context'] !== 'forgePoints') {
 		return;
 	}
@@ -22,28 +39,80 @@ FoEproxy.addHandler('ResourceShopService', 'getContexts', (data) => {
 	StrategyPoints.RefreshBuyableForgePoints(offer.formula);
 });
 
-FoEproxy.addHandler('ResourceShopService', 'buyOffer', (data) => {
+FoEproxy.addHandler('ResourceShopService', 'buyOffer', (data)=> {
 	if (data['responseData']['gains'] === undefined || data['responseData']['gains']['resources'] === undefined || data['responseData']['gains']['resources']['strategy_points'] === undefined) {
 		return;
 	}
 	StrategyPoints.RefreshBuyableForgePoints(data.responseData.formula);
 });
 
-window.addEventListener('resize', function(){
+window.addEventListener('resize', ()=>{
     StrategyPoints.HandleWindowResize();
 });
 
+// GEX started
+FoEproxy.addHandler('GuildExpeditionService', 'getOverview', (data, postData) => {
+	ActiveMap = 'gex';
+	StrategyPoints.ShowFPBar();
+});
+
+// Guildfights enter
+FoEproxy.addHandler('GuildBattlegroundService', 'getBattleground', (data, postData) => {
+	StrategyPoints.ShowFPBar();
+});
+
+// main is entered
+FoEproxy.addHandler('AnnouncementsService', 'fetchAllAnnouncements', (data, postData) => {
+	StrategyPoints.HideFPBar();
+});
+
+
+/**
+ * @type {{readonly AvailableFP: (*|number), ShowFPBar: (function(): (undefined)), HideFPBar: StrategyPoints.HideFPBar, OldStrategyPoints: number, checkForDB: (function(*): Promise<void>), pickupProductionId: null, pickupProductionBuilding: null, HandleWindowResize: StrategyPoints.HandleWindowResize, insertIntoDB: (function(*=): Promise<void>), RefreshBuyableForgePoints: StrategyPoints.RefreshBuyableForgePoints, RefreshBar: (function(*=): (undefined)), InventoryFP: number, db: null}}
+ */
 let StrategyPoints = {
 	OldStrategyPoints: 0,
 	InventoryFP: 0,
 
+	pickupProductionId: null,
+	pickupProductionBuilding: null,
+
+	db: null,
+
+	/**
+	 *
+	 * @returns {Promise<void>}
+	 */
+	checkForDB: async (playerID)=> {
+		const FP_DBName = `FoeHelperDB_FPCollector_${playerID}`;
+
+		StrategyPoints.db = new Dexie(FP_DBName);
+
+		StrategyPoints.db.version(1).stores({
+			ForgePointsStats: '++id,place,event,notes,amount,date'
+		});
+
+		StrategyPoints.db.open();
+	},
+
+
+	insertIntoDB: async (data)=>  {
+		await StrategyPoints.db.ForgePointsStats.put(data);
+	},
+
+
+	/**
+	 * Screen-size hax
+	 *
+	 * @constructor
+	 */
 	HandleWindowResize: () => {
 
-        if ( window.innerWidth < 1250 ){
+        if ( window.innerWidth < 1250 && ActiveMap !== 'gex'){
             $('#fp-bar').removeClass('medium-screen');
             $('#fp-bar').addClass('small-screen');
         }
-        else if ( window.innerWidth < 1400 ){
+        else if ( window.innerWidth < 1400 && ActiveMap !== 'gex'){
             $('#fp-bar').removeClass('small-screen');
             $('#fp-bar').addClass('medium-screen');
 		}
@@ -54,10 +123,48 @@ let StrategyPoints = {
 	},
 
 
+	ShowFPBar: ()=>{
+
+		if(ActiveMap === 'main'){
+			return ;
+		}
+
+		if( $('.fp-bar-main').length === 0){
+			$('#fp-bar').append(`<div class="fp-bar-main"><div class="number"></div><div class="bars"></div></div>`);
+
+		} else {
+			$('.fp-bar-main').show();
+		}
+
+		// necessary to wait for gift in gg + diplomatic gift
+		setTimeout(()=>{
+			const availableFPs = (ResourceStock['strategy_points'] !== undefined ? ResourceStock['strategy_points'] : 0);
+
+			$('.fp-bar-main').find('.number').text(availableFPs);
+
+			const $bar = $('.fp-bar-main').find('.bars');
+
+			// make empty
+			$bar.find('span').remove();
+			for (let i = 0; i < availableFPs; i++) {
+				$bar.append(`<span />`);
+				if (i === 9) { break; }
+			}
+		}, 800);
+
+	},
+
+
+	HideFPBar: ()=> {
+		$('.fp-bar-main').hide();
+	},
+
+
 	/**
-	 * Kaufbare FP + Formel ermitteln
+	 * Buyable FPs + formula
 	 *
 	 * @param formula
+	 * @constructor
 	 */
 	RefreshBuyableForgePoints: (formula) => {
 
@@ -76,8 +183,7 @@ let StrategyPoints = {
 			amount++;
 		}
 
-		if($('div.buyable-fp').length == 0) {
-			// $('#fp-bar').append(' ' + i18n('Boxes.StrategyPoints.BuyableFP') + ' <strong class="buyable-fp">' + HTML.Format(amount) + '</strong>');
+		if($('div.buyable-fp').length === 0) {
 			$('#fp-bar').append(`<div class="buyable-fp"><div>${ HTML.Format(amount)}</div></div>`);
 
 		} else {
@@ -85,15 +191,20 @@ let StrategyPoints = {
 		}
 	},
 
+
 	/**
-	 * Kleine FP-Bar im Header
+	 * Tiny FP bar on top of the screen
 	 *
+	 * @param value
+	 * @constructor
 	 */
     RefreshBar: ( value ) => {
         // noch nicht im DOM?
 		if( $('#fp-bar').length < 1 ){
-			// let div = $('<div />').attr('id', 'fp-bar').text(i18n('Boxes.StrategyPoints.FPBar')).append( $('<strong>0</strong>').addClass('fp-storage') );
-			let div = $('<div />').attr('id', 'fp-bar').append( `<div class="fp-storage"><div>0</div></div>` );
+			let div = $('<div />').attr({
+				id: 'fp-bar',
+				class: 'game-cursor'
+			}).append( `<div class="fp-storage"><div>0</div></div>` );
 
 			$('body').append(div);
             StrategyPoints.HandleWindowResize();
@@ -121,9 +232,49 @@ let StrategyPoints = {
 		StrategyPoints.OldStrategyPoints = StrategyPoints.InventoryFP;
 	},
 
+
 	/**
-	 * Liefert die gesamt verfügbaren FP
+	 * Handles FP collected from Quests
+	 * 
+	 */
+	HandleAdvanceQuest: (PostData) => {
+		if (PostData['requestData'] && PostData['requestData'][0])
+		{
+			let QuestID = PostData['requestData'][0];
+
+			for (let i = 0; i < MainParser.Quests.length; i++)
+			{
+				let Quest = MainParser.Quests[i];
+
+				if (Quest['id'] !== QuestID) continue;
+
+				if (Quest['state'] === 'collectReward' && Quest['genericRewards'])
+				{
+					for (let j = 0; j < Quest['genericRewards'].length; j++)
+					{
+						let Reward = Quest['genericRewards'][j];
+
+						if (Reward['subType'] === 'strategy_points')
+						{
+							StrategyPoints.insertIntoDB({
+								place: 'Quest',
+								event: 'collectReward',
+								amount: Reward['amount'],
+								date: moment(MainParser.getCurrentDate()).startOf('day').toDate()
+							});
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+
+	/**
+	 * Returns the stock and the bar FPs
 	 *
+	 * @returns {*|number}
+	 * @constructor
 	 */
 	get AvailableFP() {
 		let Ret = (ResourceStock['strategy_points'] !== undefined ? ResourceStock['strategy_points'] : 0);

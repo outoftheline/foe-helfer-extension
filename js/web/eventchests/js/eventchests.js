@@ -8,12 +8,18 @@
  * erstellt am:	              07.01.2020, 13:06 Uhr
  * zuletzt bearbeitet:       07.01.2020, 13:06 Uhr
  *
- * Copyright © 2019
+ * Copyright 2019
  *
  * **************************************************************************************
  */
 
 FoEproxy.addHandler('ChestEventService', 'getOverview', (data, postData) => {
+
+	// is activated?
+	if(!Settings.GetSetting('ShowEventChest')){
+		return;
+	}
+
     let Chests = data.responseData['chests'];
 
     let ChestData = [];
@@ -22,11 +28,11 @@ FoEproxy.addHandler('ChestEventService', 'getOverview', (data, postData) => {
 
         let CurrentChest = [];
         if (Chests[i]['cost'] !== undefined && Chests[i]['cost']['resources'] !== undefined) {
+            CurrentChest['cost'] = 0;
             for (let ResourceName in Chests[i]['cost']['resources']) {
                 if (!Chests[i]['cost']['resources'].hasOwnProperty(ResourceName)) continue;
 
-                CurrentChest['cost'] = Chests[i]['cost']['resources'][ResourceName];
-                break;
+                CurrentChest['cost'] += Chests[i]['cost']['resources'][ResourceName];
             }
         }
         else {
@@ -60,11 +66,13 @@ FoEproxy.addHandler('ChestEventService', 'getOverview', (data, postData) => {
         ChestData[ChestData.length] = CurrentChest;
     }
 
+    /*
     ChestData.sort(function (a, b) {
         return a['cost'] - b['cost'];
     });
+    */
 
-    // Ungültige Daten => Event wird nicht unterstützt => Fenster nicht anzeigen
+    // UngÃ¼ltige Daten => Event wird nicht unterstÃ¼tzt => Fenster nicht anzeigen
     if (ChestData.length === 0) {
         return;
     }
@@ -75,11 +83,7 @@ FoEproxy.addHandler('ChestEventService', 'getOverview', (data, postData) => {
 
 /**
  *
- * @type {{
- * Show: ()=>void,
- * BuildBox: ()=>void,
- * CalcBody: ()=>void,
- * }}
+ * @type {{Show: EventChests.Show, BuildBox: EventChests.BuildBox, CalcBody: EventChests.CalcBody, Chests: null}}
  */
 let EventChests = {
     Chests: null,
@@ -88,6 +92,8 @@ let EventChests = {
      *
      */
     Show: () => {
+
+
         if ($('#eventchests').length === 0) {
             HTML.Box({
                 'id': 'eventchests',
@@ -97,7 +103,7 @@ let EventChests = {
                 'minimize': true
             });
 
-            // CSS in den DOM prügeln
+            // add CSS tot the DOM
             HTML.AddCssFile('eventchests');
         }
 
@@ -153,10 +159,10 @@ let EventChests = {
             h.push('<td class="text-center text-warning text-bold">' + EventChests.Chests[i]['cost'] + '</td>');
 
             h.push('<td class="text-center">' + EventChests.Chests[i]['grandPrizeContribution'] + '</td>');
-            h.push('<td class="text-center border-right' + (EventChests.Chests[i]['costpermainprizestep'] <= BestMainPrizeCost ? ' text-success text-bold' : '') + '">' + Math.round(EventChests.Chests[i]['costpermainprizestep'] * 10) / 10 + '</td>');
+            h.push('<td class="text-center border-right' + (EventChests.Chests[i]['costpermainprizestep'] <= BestMainPrizeCost ? ' text-success text-bold' : '') + '">' + MainParser.round(EventChests.Chests[i]['costpermainprizestep'] * 10) / 10 + '</td>');
 
             h.push('<td class="text-center border-left">' + EventChests.Chests[i]['drop_chance'] + '%</td>');
-            h.push('<td class="text-center' + (EventChests.Chests[i]['costperdailyprize'] <= BestDailyPrizeCost ? ' text-success text-bold' : '') + '">' + Math.round(EventChests.Chests[i]['costperdailyprize']) + '</td>');
+            h.push('<td class="text-center' + (EventChests.Chests[i]['costperdailyprize'] <= BestDailyPrizeCost ? ' text-success text-bold' : '') + '">' + MainParser.round(EventChests.Chests[i]['costperdailyprize']) + '</td>');
 
             h.push('</tr>');
         }

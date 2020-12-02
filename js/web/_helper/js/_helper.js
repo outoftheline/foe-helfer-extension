@@ -213,7 +213,7 @@ let HTML = {
 			}
 
 			if(args['resize']) {
-				HTML.Resizeable(args['id']);
+				HTML.Resizeable(args['id'], args['keepRatio']);
 			}
 
 			if(args['minimize']) {
@@ -332,22 +332,24 @@ let HTML = {
 
 
 	/**
-	 * Box lässt sich in der Größe verändern
+	 * Box can be resized
 	 *
 	 * @param id
+	 * @param keepRatio
+	 * @constructor
 	 */
-	Resizeable: (id)=> {
+	Resizeable: (id, keepRatio)=> {
 		let box = $('#'+id),
 			grip = $('<div />').addClass('window-grippy'),
 			sizeLS = localStorage.getItem(id + 'Size');
 
-		// Größe wurde definiert, setzten
+		// Size was defined, set
 		if(sizeLS !== null)
 		{
 			let s = sizeLS.split('|');
 
-			// passt die Box von der Höhe her in den Viewport?
-			// nein, Höhe wird automatisch gesetzt, Breite übernommen
+			// Does the box fit into the Viewport in terms of height?
+			// No, height is set automatically, width taken over
 			if( $(window).height() - s[1] < 20 )
 			{
 				box.width(s[0]);
@@ -360,8 +362,7 @@ let HTML = {
 
 		box.append(grip);
 
-		// Box wird in der Größe verändert, speichern
-		box.resizable({
+		let options = {
 			handles: {
 				ne: '.window-grippy',
 				se: '.window-grippy',
@@ -374,8 +375,23 @@ let HTML = {
 				let size = $el.element.width() + '|' + $el.element.height();
 
 				localStorage.setItem(id + 'Size', size);
-			},
-		});
+			}
+		};
+
+		// keep aspect Ratio
+		if(keepRatio){
+			let width = box.width(),
+				height = box.height();
+
+			options['aspectRatio'] = width / height;
+
+			box.resizable(options);
+		}
+
+		// default
+		else {
+			box.resizable(options);
+		}
 	},
 
 
@@ -467,6 +483,40 @@ let HTML = {
 		$('.window-box').removeClass('on-top');
 
 		$this.addClass('on-top');
+	},
+
+
+	Dropdown: ()=> {
+
+		for (const option of document.querySelectorAll(".custom-option")) {
+			option.addEventListener('click', function(){
+				if (!this.classList.contains('selected')) {
+					let $this = $(this),
+						txt = $this.text();
+
+					$this.parent().find('.custom-option.selected').removeClass('selected');
+					$this.addClass('selected');
+
+					setTimeout(()=>{
+						$this.closest('.custom-select-wrapper').find('.trigger').text(txt);
+					},150);
+				}
+			})
+		}
+
+		for (const dropdown of document.querySelectorAll(".custom-select-wrapper")) {
+			dropdown.addEventListener('click', function() {
+				this.querySelector('.custom-select').classList.toggle('dd-open');
+			})
+		}
+
+		window.addEventListener('click', function(e) {
+			for (const select of document.querySelectorAll('.custom-select')) {
+				if (!select.contains(e.target)) {
+					select.classList.remove('dd-open');
+				}
+			}
+		});
 	},
 
 

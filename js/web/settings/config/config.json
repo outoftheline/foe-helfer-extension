@@ -36,12 +36,6 @@
 		"sort": 0
 	},
 	{
-		"name": "ShowTavernBadge",
-		"status": true,
-		"group": "Boxes",
-		"sort": 1
-	},
-	{
 		"name": "ShowInvestments",
 		"status": true,
 		"group": "Boxes",
@@ -55,7 +49,7 @@
 	},
 	{
 		"name": "ShowMarketFilter",
-		"status": true,
+		"status": false,
 		"group": "Boxes",
 		"sort": 4
 	},
@@ -64,6 +58,24 @@
 		"status": false,
 		"group": "Boxes",
 		"sort": 5
+	},
+	{
+		"name": "ShowEventChest",
+		"status": true,
+		"group": "Boxes",
+		"sort": 6
+	},
+	{
+		"name": "ShowRougeUnitWarning",
+		"status": true,
+		"group": "Boxes",
+		"sort": 7
+	},
+	{
+		"name": "ShowBlueGalaxyHelper",
+		"status": true,
+		"group": "Boxes",
+		"sort": 8
 	},
 	{
 		"name": "ChangeLanguage",

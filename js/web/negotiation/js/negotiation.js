@@ -67,6 +67,8 @@ let Negotiation = {
 	CONST_Context_GE: 'guildExpedition',
 	CONST_Context_GBG: 'guildBattleground',
 
+	TavernBoostExpireTime : undefined,
+
 
 	/**
 	 * Box in den DOM legen
@@ -79,10 +81,10 @@ let Negotiation = {
 			HTML.Box({
 				'id': 'negotiationBox',
 				'title': i18n('Boxes.Negotiation.Title'),
+				'ask': i18n('Boxes.Negotiation.HelpLink'),
 				'auto_close': true,
 				'minimize': true,
-				'dragdrop': true,
-				'saveCords': false
+				'dragdrop': true
 			});
 
 			// CSS in den DOM prügeln
@@ -150,7 +152,7 @@ let Negotiation = {
 			h.push('<tbody>');
 
 			h.push('<tr>');
-			h.push('<td colspan="' + (CurrentTry === 1 ? '1' : '4') + '" class="text-warning"><strong>' + i18n('Boxes.Negotiation.Chance') + ': ' + HTML.Format(Math.round(Negotiation.CurrentTable['c'])) + '%</strong></td>');
+			h.push('<td colspan="' + (CurrentTry === 1 ? '1' : '4') + '" class="text-warning"><strong>' + i18n('Boxes.Negotiation.Chance') + ': ' + HTML.Format(MainParser.round(Negotiation.CurrentTable['c'])) + '%</strong></td>');
 			if (CurrentTry === 1) {
 				h.push('<td colspan="2"><label class="game-cursor" for="NegotiationSaveCurrentEraGoods">' + i18n('Boxes.Negotiation.SaveCurrentEraGoods') + '<input id="NegotiationSaveCurrentEraGoods" class="negotation-setting game-cursor" type="checkbox" data-id="NegotiationSaveCurrentEraGoods"' + ((sceg === null || sceg === 'true') ? ' checked' : '') + '></label></td>');
 				h.push('<td colspan="1"><label class="game-cursor" for="NegotiationSaveMedals">' + i18n('Boxes.Negotiation.SaveMedals') + '<input id="NegotiationSaveMedals" class="negotation-setting game-cursor" type="checkbox" data-id="NegotiationSaveMedals"' + ((sm === null || sm === 'true') ? ' checked' : '') + '></label></td>');
@@ -195,10 +197,10 @@ let Negotiation = {
 				}
 
 				if (GoodName === 'money' || GoodName === 'supplies' || GoodName === 'medals') {
-					GoodAmount = Math.round(GoodAmount);
+					GoodAmount = MainParser.round(GoodAmount);
 				}
 				else {
-					GoodAmount = Math.round(GoodAmount * 10) / 10;
+					GoodAmount = MainParser.round(GoodAmount * 10) / 10;
 				}
 
 				h.push('<div class="good" data-slug="' + GoodName + '" title="' + i18n('Boxes.Negotiation.Stock') + ' ' + HTML.Format(Stock) + '">' +
@@ -372,9 +374,9 @@ let Negotiation = {
 					const color2 = colors[colorIdx+1];
 					const invMix = 1-mix;
 					// Lineare mischung und auf 0-255 beschrenken
-					const colorR = Math.min(255, Math.max(0, Math.round(color1[0]*invMix + color2[0]*mix)));
-					const colorG = Math.min(255, Math.max(0, Math.round(color1[1]*invMix + color2[1]*mix)));
-					const colorB = Math.min(255, Math.max(0, Math.round(color1[2]*invMix + color2[2]*mix)));
+					const colorR = Math.min(255, Math.max(0, MainParser.round(color1[0]*invMix + color2[0]*mix)));
+					const colorG = Math.min(255, Math.max(0, MainParser.round(color1[1]*invMix + color2[1]*mix)));
+					const colorB = Math.min(255, Math.max(0, MainParser.round(color1[2]*invMix + color2[2]*mix)));
 
 					colorVal = `rgba(${colorR}, ${colorG}, ${colorB}, 0.3)`;
 				} else {
@@ -404,6 +406,7 @@ let Negotiation = {
 			h.push('</tr>');
 		}
 	},
+
 
 	/**
 	 * @param {string[]} h list of html-strings to add new contend to
@@ -436,13 +439,14 @@ let Negotiation = {
 		h.push('<tr>');
 
 		const GoodsOrdered = Negotiation.GoodsOrdered;
+
 		for (let place = 0; place < Negotiation.PlaceCount; place++) {
 			h.push('<td class="text-center">');
 
 			for (let good of GoodsOrdered) {
 				if (good.canOccur.includes(place)) {
 					const hasToOccurClass = good.hasToOccur > 0 ? ' hasToOccur' : '';
-					h.push(`<span class="goods-sprite ${good.resourceId}${hasToOccurClass}"></span>`);
+					h.push(`<span class="goods-sprite multiple ${good.resourceId}${hasToOccurClass}"></span>`);
 				}
 			}
 			h.push('</td>');
@@ -525,7 +529,7 @@ let Negotiation = {
 		if (forcedTryCount != null) {
 			Negotiation.TryCount = forcedTryCount;
 		} else if (responseData.context === Negotiation.CONST_Context_GE) {
-			Negotiation.TryCount = moment.unix(Tavern.ExpireTime) > Date.now() ? 4 : 3;
+			Negotiation.TryCount = moment.unix(Negotiation.TavernBoostExpireTime) > Date.now() ? 4 : 3;
 		} else {
 			Negotiation.TryCount = Negotiation.GoodCount > 6 ? 4 : 3;
 		}
@@ -981,6 +985,12 @@ FoEproxy.addHandler('NegotiationGameService', 'submitTurn', (data, postData) => 
 
 FoEproxy.addHandler('NegotiationGameService', 'giveUp', (data, postData) => {
 	Negotiation.ExitNegotiation();
+});
+
+FoEproxy.addHandler('BoostService', 'addBoost', (data, postData) => {
+	if (data.responseData['type'] === 'extra_negotiation_turn') {
+		Negotiation.TavernBoostExpireTime = data.responseData['expireTime'];
+	}
 });
 
 

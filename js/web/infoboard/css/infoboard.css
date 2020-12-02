@@ -21,6 +21,27 @@
 	padding: 2px;
 }
 
+.info-table {
+	border-spacing: 0;
+	border-collapse: separate;
+	width: 100%;
+	background-color: transparent;
+}
+
+table.info-table:not(.no-hover) tbody tr:hover {
+	background-color: var(--background-table-hover) !important;
+}
+
+table.info-table tr th,
+table.info-table tr td {
+	padding: 2px 5px;
+}
+
+table.info-table tr td {
+	border-top: 1px solid var(--border-table-top);
+	border-bottom: 1px solid var(--border-table-bottom);
+}
+
 #BackgroundInfo #BackgroundInfoBody {
 	overflow: auto;
 }
@@ -80,7 +101,16 @@
 	width: 30px;
 }
 
-#BackgroundInfoTable .message td:first-child {
+#BackgroundInfoTable .welcome {
+	background-color: var(--background-table-odd);
+}
+
+#BackgroundInfoTable .welcome td:first-child {
+	background-image: url(../../../../css/images/menu/info.png);
+	background-size: 30px;
+}
+
+#BackgroundInfoTable .msg td:first-child {
 	background-image: url(../images/msg.png);
 	background-size: 25px;
 }
@@ -93,14 +123,6 @@
 #BackgroundInfoTable .msg-favorite td:first-child {
 	background-image: url(../images/msg-favorite.png);
 	background-size: 25px;
-}
-
-#BackgroundInfoTable .message.important td:first-child {
-	background-image: url(images/msg-important.png);
-}
-
-#BackgroundInfoTable .message.favorite td:first-child {
-	background-image: url(images/msg-favorite.png);
 }
 
 #BackgroundInfoTable .auction td:first-child {
@@ -154,6 +176,7 @@
 
 #BackgroundInfoTable .gbg-lock td:first-child {
 	background-image: url(../images/gbg-lock.png);
+	background-size: 30px;
 }
 
 #BackgroundInfoTable .gbg-undefined td:first-child {
