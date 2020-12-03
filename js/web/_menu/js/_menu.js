@@ -41,12 +41,8 @@ let _menu = {
 		'stats',
 		'chat',
 		'kits',
-		'alerts',
 		'greatbuildings',
-		'market',
-		'bluegalaxy',
-		'moppelhelper',
-		'fpCollector',
+		'market'
 	],
 
 
@@ -153,8 +149,13 @@ let _menu = {
 		let hudSlider = $('#foe-helper-hud-slider'),
 			StoredItems = localStorage.getItem('MenuPosition') || localStorage.getItem('MenuSort');
 
+		// Beta-Funktionen
+		if (HelperBeta.active) {
+			_menu.Items.unshift(...HelperBeta.menu);
+		}
+
 		if (StoredItems !== null) {
-			let storedItems = JSON.parse(StoredItems);
+			let storedItems = JSON.parse(StorgedItems);
 
 			// es ist kein neues Item hinzugekommen
 			if (_menu.Items.length === storedItems.length) {
@@ -192,6 +193,13 @@ let _menu = {
 				}
 			}
 		}
+
+		// Beta-Funktionen rausfiltern
+		_menu.Items = _menu.Items.filter(e => {
+			if (HelperBeta.active) return true;
+			if (HelperBeta.menu.includes(e)) return false;
+			return true;
+		});
 
 		// Dubletten rausfiltern
 		function unique(arr) {
