@@ -2,7 +2,7 @@
  * Messy code has these issues:
  * - GvG Annotations do not work anymore
  * - "today" is not displaying hourly
- * - GBG does not work with the DatePicker (does it, though?)
+ * - GBG only tracks the last 2 weeks, need solution for DatePicker
  * - Grouped Eras do not work with DatePicker
  * - tbc. (didn't find more, but there will be)
 */
@@ -68,7 +68,6 @@ FoEproxy.addHandler('ResourceService', 'getPlayerResources', async (data, postDa
 		date: moment().startOf('day').toDate(),
 		resources: r.resources
 	});
-    // todo
 	await IndexDB.db.statsTreasurePlayerH.put({
 		date: moment().startOf('hour').toDate(),
 		resources: r.resources
@@ -89,7 +88,6 @@ FoEproxy.addHandler('ClanService', 'getTreasury', async (data, postData) => {
 		clanId: ExtGuildID,
 		resources: r.resources
 	});
-	// todo
 	await IndexDB.db.statsTreasureClanH.put({
 		date: moment().startOf('hour').toDate(),
 		clanId: ExtGuildID,
@@ -199,8 +197,8 @@ let Stats = {
 		end: moment().toDate()
 	},
 
-	treasureSources: ['statsTreasurePlayerD', 'statsTreasureClanD'],
-	unitSources: ['statsUnitsD'],
+	treasureSources: ['statsTreasurePlayerH', 'statsTreasurePlayerD', 'statsTreasureClanH', 'statsTreasureClanD'],
+	unitSources: ['statsUnitsH', 'statsUnitsD'],
 	rewardSources: ['statsRewards'],
 	gbgSources: ['statsGBGPlayers'],
 	isSelectedTreasureSources: () => Stats.treasureSources.includes(Stats.state.source),
@@ -271,8 +269,8 @@ let Stats = {
 
 				case 'selectSource':
 					const isChangedToUnit = Stats.unitSources.includes(value) && !Stats.isSelectedUnitSources();
-					const isChangedToMyTreasure = ['statsTreasurePlayerD'].includes(value) && !Stats.isSelectedTreasureSources();
-					const isChangedToClanTreasure = ['statsTreasureClanD'].includes(value) && !Stats.isSelectedTreasureSources();
+					const isChangedToMyTreasure = ['statsTreasurePlayerH', 'statsTreasurePlayerD'].includes(value) && !Stats.isSelectedTreasureSources();
+					const isChangedToClanTreasure = ['statsTreasureClanH', 'statsTreasureClanD'].includes(value) && !Stats.isSelectedTreasureSources();
 					const isChangedToReward = Stats.rewardSources.includes(value) && !Stats.isSelectedRewardSources();
 					const isChangedToGBG = Stats.gbgSources.includes(value) && !Stats.isSelectedGBGSources();
 
@@ -865,7 +863,7 @@ let Stats = {
 			await IndexDB.db[source].where('date').between(Stats.timeSpan.start, Stats.timeSpan.end).sortBy('date');
 		}
 
-		if (['statsTreasureClanD'].includes(source)) {
+		if (['statsTreasureClanD', 'statsTreasureClanH'].includes(source)) {
 			data = data.filter(it => it.clanId === ExtGuildID);
 		}
 
@@ -892,7 +890,7 @@ let Stats = {
 	createTreasureSeries: async (datePicker = true) => {
 		const source = Stats.state.source;
 		const selectedEras = Stats.getSelectedEras();
-		const isClanTreasure = ['statsTreasureClanD'].includes(source);
+		const isClanTreasure = ['statsTreasureClanH', 'statsTreasureClanD'].includes(source);
 		const hcColors = Highcharts.getOptions().colors;
 
 		let data = await IndexDB.db[source].where('date').between(Stats.timeSpan.start, Stats.timeSpan.end).sortBy('date');
@@ -1319,7 +1317,7 @@ let Stats = {
 	setPredefinedTimeSpan: (value) => {
 		switch (value) {
 			case 'today':
-				Stats.setTimeSpan(moment().startOf('day').toDate(), moment().endOf('day').toDate());
+				Stats.setTimeSpan(moment().startOf('day').toDate(), moment().endOf('hour').toDate());
 				break;
 			case 'yesterday':
 				Stats.setTimeSpan(moment().startOf('day').subtract(1,'days').toDate(), moment().endOf('day').toDate());
