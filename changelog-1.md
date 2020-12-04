@@ -1,12 +1,82 @@
 ## Changelog - Extension
 
+##### 2.5.3.0
+
+**Neu**
+
+- Blaue Galaxy Helfer:
+    - Wenn in den "Einstellungen > Boxen > Blaue Galaxy" aktivert (default "an") wird beim Klick auf die erntbare Blaue Galaxy eine Box geöffnet die die FP stärksten verdoppelbaren Gebäude mit der korrekten Versuchanzahl darstellt 
+
+- Moppelhelfer ****BETA****:
+    - Wenn in den "Einstellungen > Boxen > Motivationen" aktivert (default = "an") werden sämtliche Ereignisse im Rathaus notiert und können über den Button im Menü geöffnet werden.
+    Sollte ein Tab durchgestrichen sein, bitte unten die Tabs des Spieles entsprechend anklicken.
+
+**Update**
+- Extension:
+    - Icons überarbeitet
+
+- Eigenanteilsrechner:
+    - [#1638](https://github.com/dsiekiera/foe-helfer-extension/issues/1638) Kopier-Overlay zentriert und neue Checkbox integriert
+
+- Kampfassistent:
+    - [#903](https://github.com/dsiekiera/foe-helfer-extension/issues/903) Das Warnfenster lässt sich nun in den Einstellungen deaktiveren
+
+- Produktüberischt:
+    - [#1629](https://github.com/dsiekiera/foe-helfer-extension/issues/1629) Ein weiterer Tab zeigt an wie viele Einheiten in nicht militärischen Gebäuden produziert werden
+
+**Bugfix**
+- Extension:
+    - [#1649](https://github.com/dsiekiera/foe-helfer-extension/issues/1649) Innogames hat etwas im Code umgestellt was das Menü zerschossen hatte
+
+- Produktüberischt:
+    - [#1640](https://github.com/dsiekiera/foe-helfer-extension/issues/1640) Produzierte FP der Ehrenstatue wurden nicht dargestellt
+
+---
+
+##### 2.5.2.9
+
+**Bugfix**
+
+- Extension:
+    - kleiner Bug beim Ansprechen der API
+
+---
+
+##### 2.5.2.8
+
+**Bugfix**
+
+- Kostenrechner:
+    - beim Öffnen eines anderen LGs schloss sich die Box
+
+---
+
+##### 2.5.2.7
+
+**Update**
+- Forschungskosten:
+    - [#1622](https://github.com/dsiekiera/foe-helfer-extension/issues/1622) Das Fenster lässt sich nun individuell in der Größe verändern
+
+- Kostenrechner:
+    - [#1590](https://github.com/dsiekiera/foe-helfer-extension/issues/1590) Die Box schliesst sich beim zweiten Klick im Menü
+
+**Bugfix**
+- Notizen:
+    - [#1627](https://github.com/dsiekiera/foe-helfer-extension/issues/1627) Es konnte keine neue Seite angelegt werden
+
+- Kostenrechner:
+    - [#1619](https://github.com/dsiekiera/foe-helfer-extension/issues/1619) Rundungsfehlern bei manchen Archefaktoren behoben
+
+---
+
 ##### 2.5.2.6
 
 **Update**
 - Extension:
     - viele Übersetzungen von [i18n.foe-helper.com](https://i18n.foe-helper.com) importiert
 
-**Bgufix**
+**Bugfix**
+- Extension:
     - Motivieren/Polieren angepasst, API neu gestaltet
 
 ---
@@ -20,7 +90,8 @@
 - Notizen:
     - der letzte Tab wird "gemerkt" wenn neue Seiten angelegt werden
 
-**Bgufix**
+**Bugfix**
+- Verhandlungsassistenen:
     - Optische Korrekturen am Verhandlungsassistenen
 
 ---
