@@ -1,12 +1,3 @@
-/*
- * Messy code has these issues:
- * - GvG Annotations do not work anymore
- * - "today" is not displaying hourly
- * - GBG only tracks the last 2 weeks, need solution for DatePicker
- * - Grouped Eras do not work with DatePicker
- * - tbc. (didn't find more, but there will be)
-*/
-
 // GBG leader board log
 FoEproxy.addHandler('GuildBattlegroundService', 'getPlayerLeaderboard', async (data, postData) => {
 	Stats.HandlePlayerLeaderboard(data.responseData);
@@ -123,9 +114,6 @@ FoEproxy.addHandler('ArmyUnitManagementService', 'getArmyInfo', async (data, pos
 });
 
 
-/**
- * @type {{RenderOptions: (function(): string), isSelectedUnitSources: (function(): boolean), DatePickerObj: null, applyDeltaToSeriesIfNeed: (function({series: *, [p: string]: *}): {series: *, chartType: string}), shortEraName: (function(*): (void|string|*)), Render: (function(): Promise<void>), RenderButton: (function({name: *, isActive?: *, dataType: *, value: *, title?: *, disabled?: *}): string), updateCharts: (function(): Promise<void>), getSelectedEras: (function(): string[]), updateOptions: Stats.updateOptions, treasureSources: [string, string, string, string], createUnitsSeries: (function(): Promise<{series, pointFormat: string, footerFormat: string}>), loadHighcharts: (function(): Promise<void>), RemoveTable: Stats.RemoveTable, createTreasureSeries: (function(): Promise<{series, pointFormat: string, colors: *[], footerFormat: string}>), ResMap: {NoAge: [string, string, string, string, string], StoneAge: [], PostModernEra: [string, string, string, string, string], ContemporaryEra: [string, string, string, string, string], TomorrowEra: [string, string, string, string, string], ArcticFuture: [string, string, string, string, string], IronAge: [string, string, string, string, string], ModernEra: [string, string, string, string, string], OceanicFuture: [string, string, string, string, string], SpaceAgeAsteroidBelt: [string, string, string, string, string], SpaceAgeVenus: [], special: [string, string, string, string], LateMiddleAge: [string, string, string, string, string], EarlyMiddleAge: [string, string, string, string, string], VirtualFuture: [string, string, string, string, string], SpaceAgeMars: [string, string, string, string, string], BronzeAge: [string, string, string, string, string], IndustrialAge: [string, string, string, string, string], ProgressiveEra: [string, string, string, string, string], HighMiddleAge: [string, string, string, string, string], ColonialAge: [string, string, string, string, string], FutureEra: [string, string, string, string, string]}, RenderCheckbox: (function({name: *, isActive: *, dataType: *, value: *}): string), state: {eras: {}, showAnnotations: boolean, period: string, currentType: null, chartType: string, rewardSource: string, eraSelectOpen: boolean, source: string, isGroupByEra: boolean}, createRewardSeries: (function(): Promise<{series: {data: this, name: string}[], title: string}>), isVisitingCulturalOutpost: boolean, isSelectedGBGSources: (function(): boolean), gbgSources: [string], promisedLoadCode: (function(*=): Promise<unknown>), createGBGSeries: (function(*=): Promise<{series: {data, avatarUrl: (string), name: string}[], pointFormat: string}>), createTreasureGroupByEraSeries: (function(): Promise<{series: {data, name: *}[]}>), RenderTab: (function({name: *, isActive?: *, dataType: *, value: *, title?: *, disabled?: *}): string), kilos: (function(*=): string), HandlePlayerLeaderboard: (function(*=): Promise<undefined>), isSelectedTreasureSources: (function(): boolean), RenderBox: (function({name: *, isActive: *, disabled: *, dataType: *, value: *}): string), getAnnotations: (function(): Promise<{xAxisPlotLines: {color: string, dashStyle: string, width: number, value: *}[], annotations: {useHTML: boolean, labelOptions: {verticalAlign: string, backgroundColor: string, y: number, style: {fontSize: string}}, labels: {text: string, point: {xAxis: number, x: *, y: number}}[]}[]}>), updateCommonChart: (function({series: *, colors?: *, pointFormat?: *, footerFormat?: *, chartType?: *}): Promise<void>), RenderSecondaryOptions: (function(): string), PlayableEras: string[], unitSources: [string, string], equals: (function(*=, *=): boolean), isSelectedRewardSources: (function(): boolean), Show: Stats.Show, RenderEraSwitchers: (function(): string), updateRewardCharts: Stats.updateRewardCharts, rewardSources: [string]}}
- */
 let Stats = {
 
 	isVisitingCulturalOutpost: false,
