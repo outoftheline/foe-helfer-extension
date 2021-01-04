@@ -1,8 +1,178 @@
 ## Changelog - Extension
 
 
-- Eigenanteilsrechner: overlay zentriert, neue Checkbox integriert
+##### 2.5.4.3
 
+**Update**
+- Produktionsübersicht:
+    - [#1647](https://github.com/dsiekiera/foe-helfer-extension/issues/1647) [#1662](https://github.com/dsiekiera/foe-helfer-extension/issues/1662) Ab sofort steht in jedem Tab in grüner Farbe rechts oben was fertig ist und geerntet werden kann
+
+**Bugfix**
+- Extension:
+    - Kompatibilität zu älteren Browsern wieder hergestellt 
+
+- Marktplatz Filter:
+    - [#1723](https://github.com/dsiekiera/foe-helfer-extension/issues/1723) Der Inhalt des Marktplatz-Filters wurde nicht angezeigt, Geht nun wieder
+
+- Produktionsübersicht:
+    - [#1726](https://github.com/dsiekiera/foe-helfer-extension/issues/1726) Eventgebäude die nicht an eine Straße angeschlossen sind produzieren dennoch Bevölkerung, das wurde korrigiert
+
+---
+
+##### 2.5.4.2
+
+**Update**
+- Produktionsübersicht:
+    - Alcatraz in die Übersicht für "Einheiten" hinzugefügt
+    
+- FP-Collector:
+    - Pfeile hinzugefügt um dazustellen das man die Einträge aufklappen kann
+
+- Infobox:
+    - [#1704](https://github.com/dsiekiera/foe-helfer-extension/issues/1704) Kann ab sofort, wenn gewünscht mit dem Spielstart geladen werden => "Einstellungen > Boxen > Infobox"
+    - [#1416](https://github.com/dsiekiera/foe-helfer-extension/issues/1416) Kann ab ab sofort auf eine Länge beschränkt werden => "Einstellungen > Boxen > Infobox Nachrichten" um den Browser bei sehr vielen Einträgen zu schonen
+  - Die Einträge der Infobox werden gespeichert wenn sie nur geschlossen und wieder geöffnet wird
+
+
+**Bugfix**
+- Extension:
+    - [#1720](https://github.com/dsiekiera/foe-helfer-extension/issues/1720) Filter im Moppelassistent reagiert falsch, wenn Infobox offen ist
+    - [#1707](https://github.com/dsiekiera/foe-helfer-extension/issues/1707) Einige Mitteilungen wurden nicht angezeigt
+
+- Menü-Box:
+    - [#1717](https://github.com/dsiekiera/foe-helfer-extension/issues/1717) Wenn die Box oben am Rand liegt, verschwanden die Tooltips ausserhalb des sichtbaren Bereiches
+
+- Produktionsübersicht: 
+    - [#1709](https://github.com/dsiekiera/foe-helfer-extension/issues/1709) Die Box wurde zu lang, die ist nun wieder scrollbar
+
+- Infobox:
+    - [#1694](https://github.com/dsiekiera/foe-helfer-extension/issues/1694) Falsche Übersetzung im Filter gefixt "GvG" => "GG"
+    - Der Nachrichtenfilter ist nun case-Insesitive (Groß- Kleinschreibung wird ignoriert)
+    
+- Moppelhelfer:
+    - [#1658](https://github.com/dsiekiera/foe-helfer-extension/issues/1658) Datumserkennung für CZ gefixt
+
+---
+
+##### 2.5.4.1
+
+**Bugfix**
+- Menü:
+    - [#1701](https://github.com/dsiekiera/foe-helfer-extension/issues/1701) [#1702](https://github.com/dsiekiera/foe-helfer-extension/issues/1702) in älteren Browsern konnte der Helfer nicht geladen werden
+
+- Produktionsübersicht:
+    - [#1696](https://github.com/dsiekiera/foe-helfer-extension/issues/1696) In manchen Browsers war die Tabelle nicht breit genug
+
+- Extension:
+    - [#1699](https://github.com/dsiekiera/foe-helfer-extension/issues/1699) Benachrichtiungen wurden trotz Deaktivierung dargestellt
+
+---
+
+##### 2.5.4.0
+
+**Neu**
+- Menü: 
+    - [#1664](https://github.com/dsiekiera/foe-helfer-extension/issues/1664) [#1665](https://github.com/dsiekiera/foe-helfer-extension/issues/1665) Es gibt nun 3 Menü Varianten (rechts, unten und Box)
+    - Auswählbar über "Einstellungen > Erweiterung > Menü wechseln"
+    - Redesign (kleiner, neue Grafiken) des unteren und der Box Variante für mehr Platz
+
+- Erweiterung:
+    - Die Benachrichtigungen sind nun abschaltbar "Einstellungen > Erweiterung > Benachrichtigung"
+    - Die Benachrichtiungen können an unterschiedlichen Positionen erscheinen "Einstellungen > Erweiterung > Benachrichtigungs- positionen"
+
+**Update**
+- Stadtübersicht:
+    - [#1659](https://github.com/dsiekiera/foe-helfer-extension/issues/1659) Übersetzungen für die Statistiken wurden ergänzt
+
+- Blaue Galaxy Helfer:
+    - [#1653](https://github.com/dsiekiera/foe-helfer-extension/issues/1653) kann nun nach Güter gewichten. Soll nur nach FP gewichtet werden, ändere den Wert auf "0" (Null)
+
+- Produktionsübersicht:
+    - [#1646](https://github.com/dsiekiera/foe-helfer-extension/issues/1646) aktualisiert sich nun wenn die Ernte mit Diamanten eingesammelt wird
+
+- Infobox: 
+    - [#1552](https://github.com/dsiekiera/foe-helfer-extension/issues/1552) ab sofort kann im Filter nach einem Text gesucht werden
+
+- Erweiterung:
+    - viele Übersetzungen von [i18n.foe-helper.com](http://i18n.foe-helper.com/projects/foe-helper/extension/) wurden integriert. Helfe auch du noch mehr Übersetzungen zu integrieren und registriere dich
+
+**Bugfix**
+- FP-Collector:
+    - [#1690](https://github.com/dsiekiera/foe-helfer-extension/issues/1690) der Collector hat nicht alle Verdopplungen gezählt
+    - [#1693](https://github.com/dsiekiera/foe-helfer-extension/issues/1693) Übersetzungsfehler behoben
+
+- Erweiterung:
+    - [#1687](https://github.com/dsiekiera/foe-helfer-extension/issues/1687) im Firefox wurden nicht alle Übersetzungen geladen
+
+- Menü:
+    - [#1681](https://github.com/dsiekiera/foe-helfer-extension/issues/1681) das Drag&Drop war zu empfindlich und hat immer die Meldung gerbacht "Das neue Menü-Reihenfolge wurde gespeichert", das haben wir geändert
+
+---
+
+##### 2.5.3.2
+
+**BugFix**
+- FP-Collector:
+    - Ein kleiner Bug verhinderte das Anzeigen des Menübuttons
+
+---
+
+##### 2.5.3.1
+
+**Neu**
+
+- FP-Collector:
+    - Sammelt tagesweise und nach Art sortiert alle FPs ein die Du im kompletten Spiel sammelst um so eine Gesamtübersicht deiner "nebenbei" FPs zu erstellen
+
+**Update**
+
+- Menü:
+    - [#1661](https://github.com/dsiekiera/foe-helfer-extension/issues/1661) [#1657](https://github.com/dsiekiera/foe-helfer-extension/issues/1657) wegen dem neuen dynamischen Menü weicht das Menü des Helfers an den unteren Rand aus
+
+- Moppelhelfer:
+    - Über den Tabbelkopf können die Werte sortiert werden
+    - Filter für verschiedene Ereignisse [#1652](https://github.com/dsiekiera/foe-helfer-extension/issues/1652)
+    - Farbige Werte für besseres unterscheiden
+
+**BugFix**
+
+- Eventhelfer:
+    - [#1655](https://github.com/dsiekiera/foe-helfer-extension/issues/1655) Fehlerhafte Erkennung des Tagespreises Football Event 2021
+
+---
+
+##### 2.5.3.0
+
+**Neu**
+
+- Blaue Galaxy Helfer:
+    - Wenn in den "Einstellungen > Boxen > Blaue Galaxy" aktivert (default "an") wird beim Klick auf die erntbare Blaue Galaxy eine Box geöffnet die die FP stärksten verdoppelbaren Gebäude mit der korrekten Versuchanzahl darstellt 
+
+- Moppelhelfer ****BETA****:
+    - Wenn in den "Einstellungen > Boxen > Motivationen" aktivert (default = "an") werden sämtliche Ereignisse im Rathaus notiert und können über den Button im Menü geöffnet werden.
+    Sollte ein Tab durchgestrichen sein, bitte unten die Tabs des Spieles entsprechend anklicken.
+
+**Update**
+- Extension:
+    - Icons überarbeitet
+
+- Eigenanteilsrechner:
+    - [#1638](https://github.com/dsiekiera/foe-helfer-extension/issues/1638) Kopier-Overlay zentriert und neue Checkbox integriert
+
+- Kampfassistent:
+    - [#903](https://github.com/dsiekiera/foe-helfer-extension/issues/903) Das Warnfenster lässt sich nun in den Einstellungen deaktiveren
+
+- Produktüberischt:
+    - [#1629](https://github.com/dsiekiera/foe-helfer-extension/issues/1629) Ein weiterer Tab zeigt an wie viele Einheiten in nicht militärischen Gebäuden produziert werden
+
+**Bugfix**
+- Extension:
+    - [#1649](https://github.com/dsiekiera/foe-helfer-extension/issues/1649) Innogames hat etwas im Code umgestellt was das Menü zerschossen hatte
+
+- Produktüberischt:
+    - [#1640](https://github.com/dsiekiera/foe-helfer-extension/issues/1640) Produzierte FP der Ehrenstatue wurden nicht dargestellt
+
+---
 
 ##### 2.5.2.9
 
@@ -582,7 +752,7 @@
 - Armeeübersicht:
     - [#434](https://github.com/dsiekiera/foe-helfer-extension/issues/434) [#467](https://github.com/dsiekiera/foe-helfer-extension/issues/467) Neue Armee Boni integriert
     
-- Verhandlungsassitent:    
+- Verhandlungsassistent:    
     - [#519](https://github.com/dsiekiera/foe-helfer-extension/issues/519) Nummerntasten Anzeige und Benutzung (erste Zahl Person, zweite Taste Gut + Leertaste abschicken)
 
 - Menü:
@@ -595,7 +765,7 @@
 - Menü:
     - [#411](https://github.com/dsiekiera/foe-helfer-extension/issues/411) [#413](https://github.com/dsiekiera/foe-helfer-extension/issues/413) doppelte Einträge gefixt
 
-- Verhandlungsassitent:
+- Verhandlungsassistent:
     - [#421](https://github.com/dsiekiera/foe-helfer-extension/issues/421) Vorrats-Tooltip beim Verhandlungsassistent blieb sichtbar
     - [#459](https://github.com/dsiekiera/foe-helfer-extension/issues/459) zeigte ausgeschlossene Güter
     - [#491](https://github.com/dsiekiera/foe-helfer-extension/issues/491) Fehler beim Verhandlungsassistent

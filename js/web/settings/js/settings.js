@@ -49,7 +49,7 @@ let Settings = {
 	 * @param callback
 	 * @constructor
 	 */
-	LoadConfig: (callback)=> {
+	LoadConfig: (callback) => {
 		fetch(
 			`${extUrl}js/web/settings/config/config.json`
 		).then(response => {
@@ -63,8 +63,8 @@ let Settings = {
 	/**
 	 * Box initiieren
 	 */
-	BuildBox: ()=> {
-		if( $('#SettingsBox').length < 1 ){
+	BuildBox: () => {
+		if ($('#SettingsBox').length < 1) {
 
 			// CSS in den DOM prügeln
 			HTML.AddCssFile('settings');
@@ -87,14 +87,13 @@ let Settings = {
 	 * Box zusammen setzen
 	 *
 	 */
-	BuildBody: ()=> {
+	BuildBody: () => {
 
 		let parentLis = [],
 			div = [],
 			content;
 
-		for(let i = 0; i < Settings.BoxGroups.length; i++)
-		{
+		for (let i = 0; i < Settings.BoxGroups.length; i++) {
 			let g = Settings.BoxGroups[i],
 				grps = Settings.Preferences.filter((x) => x['group'] === g),
 				subcontent,
@@ -104,9 +103,8 @@ let Settings = {
 
 			parentLis.push(`<li><a href="#tab-${i}"><span>${i18n('Settings.Tab.' + g)}</span></a></li>`);
 
-			for(let x in grps)
-			{
-				if(!grps.hasOwnProperty(x)){
+			for (let x in grps) {
+				if (!grps.hasOwnProperty(x)) {
 					break;
 				}
 
@@ -125,19 +123,22 @@ let Settings = {
 						)
 					);
 
-				let s = localStorage.getItem(d['name']);
+				if ("SelectedMenu" !== d['name'] && 'NotificationsPosition' !== d['name']) {
 
-				if(s !== null){
-					status = JSON.parse(s);
+					let s = localStorage.getItem(d['name']);
+
+					if (s !== null) {
+						status = JSON.parse(s);
+					}
 				}
 
-				if(d['callback'] !== undefined) {
-					cs.html( Settings[d['callback']]() );
+				if (d['callback'] !== undefined) {
+					cs.html(Settings[d['callback']]());
 
 				}
-				else if(status === undefined){
+				else if (status === undefined) {
 					let b = $('<span />').addClass('button-wrapper').append(
-						$('<button class="btn-default" id="${button}" onclick="Settings.' + button +  '()">' + i18n(`Settings.${d['name']}.Button`) + '</button>')
+						$('<button class="btn-default" id="${button}" onclick="Settings.' + button + '()">' + i18n(`Settings.${d['name']}.Button`) + '</button>')
 					);
 
 					cs.html(b);
@@ -146,42 +147,42 @@ let Settings = {
 				cd.html(i18n(`Settings.${d['name']}.Desc`));
 				ct.text(i18n(`Settings.${d['name']}.Title`));
 				cs.find('input.setting-check').attr('data-id', d['name']);
-				if(status){
+				if (status) {
 					cs.find('input.setting-check').attr('checked', '');
 				}
 				cs.find('.check').addClass(status ? '' : 'unchecked');
-				cs.find('.toogle-word').text( status ? i18n('Boxes.Settings.Active') : i18n('Boxes.Settings.Inactive') );
+				cs.find('.toogle-word').text(status ? i18n('Boxes.Settings.Active') : i18n('Boxes.Settings.Inactive'));
 
-				childLis.push(`<li><a href="#subtab-${cnt}">${i18n('Settings.Entry.' + d['name'])}</a></li>`);
+				childLis.push(`<li><a href="#subtab-${cnt}" title="${i18n('Settings.Entry.' + d['name'])}">${i18n('Settings.Entry.' + d['name'])}</a></li>`);
 
-				let h = c.append( cr.append(ct, cd, cs));
+				let h = c.append(cr.append(ct, cd, cs));
 				childDivs.push('<div id="subtab-' + cnt + '" class="sub-tab">' + h.html() + '</div>');
 
 				cnt++;
 			}
 
-			subcontent = 	`<div class='tabs-sub settings-sub'>`;
-			subcontent += 		`<ul class='vertical'>${childLis.join('')}</ul>`;
-			subcontent += 		childDivs.join('');
-			subcontent += 	`</div>`;
+			subcontent = `<div class='tabs-sub settings-sub'>`;
+			subcontent += `<ul class='vertical'>${childLis.join('')}</ul>`;
+			subcontent += childDivs.join('');
+			subcontent += `</div>`;
 
 			div.push(`<div id='tab-${i}' class="settings-wrapper">${subcontent}</div>`);
 		}
 
 		content = `<div class='tabs settings'>`;
-		content += 		`<ul class='horizontal'>${parentLis.join('')}</ul>`;
-		content += 		div.join('');
+		content += `<ul class='horizontal dark-bg'>${parentLis.join('')}</ul>`;
+		content += div.join('');
 		content += `</div>`;
 
 		// wait for html in the DOM
-		$('#SettingsBoxBody').html(content).promise().done(function(){
+		$('#SettingsBoxBody').html(content).promise().done(function () {
 			// init Tabslet
 			$('.settings').tabslet();
 			$('.settings-sub').tabslet();
 		});
 
 
-		$('#SettingsBoxBody').on('click', 'input.setting-check', function(){
+		$('#SettingsBoxBody').on('click', 'input.setting-check', function () {
 			Settings.StoreSettings($(this));
 		});
 	},
@@ -193,19 +194,19 @@ let Settings = {
 	 * @param el
 	 * @param changeText
 	 */
-	StoreSettings: (el, changeText = true)=> {
+	StoreSettings: (el, changeText = true) => {
 		let id = $(el).data('id'),
 			v = $(el).prop('checked');
 
 		localStorage.setItem(id, v);
 
-		if(changeText === false){
+		if (changeText === false) {
 			return;
 		}
 
-		$(el).prev().text( v === true ? i18n('Boxes.Settings.Active') : i18n('Boxes.Settings.Inactive') );
+		$(el).prev().text(v === true ? i18n('Boxes.Settings.Active') : i18n('Boxes.Settings.Inactive'));
 
-		if(v === true){
+		if (v === true) {
 			$(el).closest('span.check').removeClass('unchecked');
 		} else {
 			$(el).closest('span.check').addClass('unchecked');
@@ -214,20 +215,21 @@ let Settings = {
 
 
 	/**
-	 * Gibt den Status aus dem localStorage oder den Settings zurück
+	 * Returns the status from the localStorage or the Settings
 	 *
 	 * @param name
+	 * @param is_string
 	 * @returns {any}
 	 */
-	GetSetting: (name)=> {
+	GetSetting: (name, is_string = false) => {
 		let s = localStorage.getItem(name);
 
-		if(s !== null){
-			return JSON.parse(s);
+		if (s !== null) {
+			return is_string ? s : JSON.parse(s);
 
 		} else {
 
-			if(Settings.Preferences === null){
+			if (Settings.Preferences === null) {
 
 				Settings.LoadConfig((response) => {
 					Settings.Preferences = response;
@@ -247,7 +249,7 @@ let Settings = {
 	 *
 	 * @returns {string}
 	 */
-	VersionInfo: ()=> {
+	VersionInfo: () => {
 
 		return `<p>${i18n('Settings.Version.Link').replace('__version__', extVersion)}</p>
 				<dl class="info-box">
@@ -265,7 +267,7 @@ let Settings = {
 	 * @returns {string}
 	 * @constructor
 	 */
-	ExportView: ()=> {
+	ExportView: () => {
 		return `<p>${i18n('Settings.ExportSettings.ViewExport')} <button class="btn-default" id="export-settings" onclick="Settings.ExportSettings()">${i18n('Settings.ExportSettings.Button')}</button></p>
 				<hr>
 				<p>${i18n('Settings.ExportSettings.ViewImport')} <input type="file" id="import-settings" onchange="Settings.ImportSettings()" accept="application/json"></p>`;
@@ -277,19 +279,19 @@ let Settings = {
 	 *
 	 * @constructor
 	 */
-	ExportSettings: ()=> {
+	ExportSettings: () => {
 		let settings = {};
 
-		Object.keys(localStorage).forEach((key)=>{
+		Object.keys(localStorage).forEach((key) => {
 
-			if(
+			if (
 				key.indexOf('Cords') > -1 ||
 				key.indexOf('Size') > -1 ||
 				key.indexOf('CopyName') > -1 ||
 				key.indexOf('MenuSort') > -1 ||
 				key.indexOf('Tone') > -1 ||
 				key.indexOf('ForderBonus') > -1
-			){
+			) {
 				settings[key] = localStorage.getItem(key);
 			}
 		});
@@ -303,11 +305,43 @@ let Settings = {
 
 
 	/**
+	 * Relocation for Menu
+	 * 
+	 * @returns {string}
+	 */
+	MenuSelected: () => {
+		let dp = [];
+
+		dp.push('<select class="setting-dropdown" id="change-menu">');
+
+		for (let index = 0; index < _menu.MenuOptions.length; index++) {
+			const element = _menu.MenuOptions[index];
+			if (element[Object.keys(element)[0]]) {
+				dp.push('<option value="' + Object.keys(element)[0] + '"' + (MainParser.SelectedMenu === Object.keys(element)[0] ? ' selected' : '') + '>' + i18n('Menu.' + Object.keys(element)[0]) + '</option>');
+			}
+		}
+
+		dp.push('</select>');
+
+		$('#SettingsBoxBody').on('change', '#change-menu', function () {
+			let selMenu = $(this).val();
+
+			localStorage.setItem('SelectedMenu', selMenu);
+
+			location.reload();
+		});
+
+		return dp.join('');
+
+	},
+
+
+	/**
 	 * Import saved settigns
 	 *
 	 * @constructor
 	 */
-	ImportSettings: ()=> {
+	ImportSettings: () => {
 		let file = document.getElementById("import-settings").files[0];
 
 		if (file) {
@@ -318,7 +352,7 @@ let Settings = {
 
 				const parts = JSON.parse(evt.target.result);
 
-				Object.keys(parts).forEach((key)=> {
+				Object.keys(parts).forEach((key) => {
 					localStorage.setItem(key, parts[key]);
 				});
 
@@ -338,13 +372,13 @@ let Settings = {
 	 *
 	 * @returns {string}
 	 */
-	About: ()=> {
-		return  '<hr>'+
-				'<h2>'+i18n('Settings.About.TranslateTitle')+'</h2>'+
-				'<p>'+i18n('Settings.About.TranslateDesc')+' <a href="http://i18n.foe-helper.com/" target="_blank">Weblate</a></p>'+
-				'<hr>'+
-				'<h2>'+i18n('Settings.About.RatingTitle')+'</h2>'+
-				'<p>'+i18n('Settings.About.RatingDesc')+'</p>';
+	About: () => {
+		return '<hr>' +
+			'<h2>' + i18n('Settings.About.TranslateTitle') + '</h2>' +
+			'<p>' + i18n('Settings.About.TranslateDesc') + ' <a href="http://i18n.foe-helper.com/" target="_blank">Weblate</a></p>' +
+			'<hr>' +
+			'<h2>' + i18n('Settings.About.RatingTitle') + '</h2>' +
+			'<p>' + i18n('Settings.About.RatingDesc') + '</p>';
 	},
 
 
@@ -353,13 +387,13 @@ let Settings = {
 	 *
 	 * @returns {string}
 	 */
-	Help: ()=> {
-		return '<ul class="helplist">' + 
-					'<li><a href="https://foe-rechner.de" target="_blank"><span class="website">&nbsp;</span>' + i18n('Settings.Help.Website') + '</a></li>' +
-					'<li><a href="https://forum.foe-rechner.de/" target="_blank"><span class="forums">&nbsp;</span>' +	i18n('Settings.Help.Forums') + '</a></li>' +
-					'<li><a href="https://discord.gg/z97KZq4" target="_blank"><span class="discord">&nbsp;</span>' + i18n('Settings.Help.Discord') + '</a></li>' +
-					'<li><a href="https://github.com/dsiekiera/foe-helfer-extension/issues" target="_blank"><span class="github">&nbsp;</span>' +	i18n('Settings.Help.Github') + '</a></li>' +
-				'</ul>';
+	Help: () => {
+		return '<ul class="helplist">' +
+			'<li><a href="https://foe-rechner.de" target="_blank"><span class="website">&nbsp;</span>' + i18n('Settings.Help.Website') + '</a></li>' +
+			'<li><a href="https://forum.foe-rechner.de/" target="_blank"><span class="forums">&nbsp;</span>' + i18n('Settings.Help.Forums') + '</a></li>' +
+			'<li><a href="https://discord.gg/z97KZq4" target="_blank"><span class="discord">&nbsp;</span>' + i18n('Settings.Help.Discord') + '</a></li>' +
+			'<li><a href="https://github.com/dsiekiera/foe-helfer-extension/issues" target="_blank"><span class="github">&nbsp;</span>' + i18n('Settings.Help.Github') + '</a></li>' +
+			'</ul>';
 	},
 
 
@@ -367,16 +401,16 @@ let Settings = {
 	 * Resets all Box Coordinated to the default values
 	 *
 	 */
-	ResetBoxCoords: ()=>{
-		$.each(localStorage, function(key, value){
-			if(key.toLowerCase().indexOf('cords') > -1){
+	ResetBoxCoords: () => {
+		$.each(localStorage, function (key, value) {
+			if (key.toLowerCase().indexOf('cords') > -1) {
 				localStorage.removeItem(key);
 			}
 		});
 
 		$('#ResetBoxCoords').addClass('btn-green');
 
-		setTimeout(()=>{
+		setTimeout(() => {
 			$('#ResetBoxCoords').removeClass('btn-green');
 		}, 2000)
 	},
@@ -387,23 +421,22 @@ let Settings = {
 	 *
 	 * @returns {string}
 	 */
-	LanguageDropdown: ()=>{
+	LanguageDropdown: () => {
 		let dp = [];
 
 		dp.push('<select class="setting-dropdown" id="change-lang">');
 
-		for(let iso in Languages.PossibleLanguages)
-		{
-			if (!Languages.PossibleLanguages.hasOwnProperty(iso)){
+		for (let iso in Languages.PossibleLanguages) {
+			if (!Languages.PossibleLanguages.hasOwnProperty(iso)) {
 				break;
 			}
 
-			dp.push('<option value="' + iso + '"' + (MainParser.Language === iso ? ' selected': '') + '>' + Languages.PossibleLanguages[iso] + '</option>');
+			dp.push('<option value="' + iso + '"' + (MainParser.Language === iso ? ' selected' : '') + '>' + Languages.PossibleLanguages[iso] + '</option>');
 		}
 
 		dp.push('</select>');
 
-		$('#SettingsBoxBody').on('change', '#change-lang', function(){
+		$('#SettingsBoxBody').on('change', '#change-lang', function () {
 			let uLng = $(this).val();
 
 			localStorage.setItem('user-language', uLng);
@@ -420,23 +453,24 @@ let Settings = {
 	 *
 	 * @returns {null|undefined|jQuery}
 	 */
-	MenuInputLength: ()=> {
+	MenuInputLength: () => {
 		let ip = $('<input />').addClass('setting-input').attr({
-					type: 'number',
-					id: 'menu-input-length',
-					step: 1,
-					min: 2
-				}),
-			value = localStorage.getItem('MenuLength');
+			type: 'number',
+			id: 'menu-input-length',
+			step: 1,
+			min: 2
+		}),
+		value = localStorage.getItem('MenuLength');
+		ip[0].defaultValue = ip[0].value = value;
 
-		if(null !== value){
+		if (null !== value) {
 			ip.val(value);
 		}
 
-		$('#SettingsBox').on('keyup', '#menu-input-length', function(){
+		$('#SettingsBox').on('keyup', '#menu-input-length', function () {
 			let value = $(this).val();
 
-			if(value > 0){
+			if (value > 0) {
 				localStorage.setItem('MenuLength', value);
 			} else {
 				localStorage.removeItem('MenuLength');
@@ -446,5 +480,85 @@ let Settings = {
 		});
 
 		return ip;
+	},
+
+	/**
+	 *	Erzeugt ein Input Feld
+	 *
+	 * @returns {null|undefined|jQuery}
+	 */
+	InfoboxInputEntryCount: () => {
+		let ip = $('<input />').addClass('setting-input').attr({
+			type: 'number',
+			id: 'infobox-entry-length',
+			step: 1,
+			min: 1
+		}),
+			value = localStorage.getItem('EntryCount') || 0;
+		ip[0].defaultValue = ip[0].value = value;
+
+		localStorage.setItem('EntryCount', value);
+
+		$('#SettingsBox').on('keyup', '#infobox-entry-length', function () {
+			let value = $(this).val();
+
+			if (value > 0) {
+				localStorage.setItem('EntryCount', value);
+			} else {
+				localStorage.setItem('EntryCount', 0);
+			}
+
+			Infoboard.MaxEntries = value;
+		});
+
+		return ip;
+	},
+
+
+	NotificationView: () => {
+		let elements = [],
+			settingPos = localStorage.getItem('NotificationPosition'),
+			positions = [
+				'bottom-left',
+				'bottom-right',
+				'top-right',
+				'top-left',
+				'bottom-center',
+				'top-center',
+				'mid-center'
+			];
+
+		if (!settingPos) {
+			settingPos = 'bottom-right';
+		}
+
+		elements.push('<select class="setting-dropdown" id="notification-position">');
+
+		for (let pos in positions) {
+			if (!positions.hasOwnProperty(pos)) { break; }
+
+			elements.push(`<option value="${positions[pos]}"${(settingPos === positions[pos] ? ' selected' : '')}>${i18n('Menu.Notification.Position.' + positions[pos])}</option>`);
+		}
+
+		elements.push('</select>');
+
+		$('#SettingsBoxBody').on('change', '#notification-position', function () {
+			let pos = $(this).val();
+
+			localStorage.setItem('NotificationsPosition', pos);
+
+			$.toast({
+				heading: i18n('Settings.NotificationPosition.ToastTestHeader'),
+				text: i18n('Settings.NotificationPosition.ToastTestBody'),
+				icon: 'success',
+				hideAfter: 6000,
+				position: pos,
+				afterHidden: function () {
+					$('.jq-toast-wrap').remove();
+				}
+			});
+		});
+
+		return elements.join('');
 	}
 };

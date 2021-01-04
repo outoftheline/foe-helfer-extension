@@ -35,9 +35,10 @@ FoEproxy.addHandler('RewardService', 'collectReward', (data, postData) => {
 	StrategyPoints.insertIntoDB({
 		event: event,
 		amount: d['amount'],
-		date: moment(MainParser.getCurrentDate()).startOf('day').toDate()
+		date: moment(MainParser.getCurrentDate()).format('YYYY-MM-DD')
 	});
 });
+
 
 // GEX FP from chest
 FoEproxy.addHandler('GuildExpeditionService', 'openChest', (data, postData) => {
@@ -48,38 +49,31 @@ FoEproxy.addHandler('GuildExpeditionService', 'openChest', (data, postData) => {
 	}
 
 	StrategyPoints.insertIntoDB({
-		place: 'Guildexpedition',
 		event: 'chest',
 		amount: d['amount'],
-		date: moment(MainParser.getCurrentDate()).startOf('day').toDate()
+		date: moment(MainParser.getCurrentDate()).format('YYYY-MM-DD')
 	});
 });
+
 
 // Visit other tavern
 FoEproxy.addHandler('FriendsTavernService', 'getOtherTavern', (data, postData) => {
 	const d = data['responseData'];
 
-	if(!d['rewardResources'] || !d['rewardResources']['resources'] || !d['rewardResources']['resources']['strategy_points']){
+	if(!d['rewardResources'] || !d['rewardResources']['resources'] || !d['rewardResources']['resources']['strategy_points'] || !postData[0] || !postData[0]['requestData'] || !postData[0]['requestData'][0]){
 		return;
 	}
 
+	const player = PlayerDict[postData[0]['requestData'][0]];
+	console.log(player)
 	StrategyPoints.insertIntoDB({
-		place: 'FriendsTavern',
 		event: 'satDown',
+		notes: player ? player.PlayerName : undefined,
 		amount: d['rewardResources']['resources']['strategy_points'],
-		date: moment(MainParser.getCurrentDate()).startOf('day').toDate()
+		date: moment(MainParser.getCurrentDate()).format('YYYY-MM-DD')
 	});
 });
 
-// double Collection by Blue Galaxy
-FoEproxy.addHandler('CityMapService', 'showEntityIcons', (data, postData) => {
-
-	if(data['responseData'][0]['type'] !== 'citymap_icon_double_collection'){
-		return;
-	}
-
-	StrategyPoints.pickupProductionId = data['responseData'][0]['id'];
-});
 
 // Plunder reward
 FoEproxy.addHandler('OtherPlayerService', 'rewardPlunder', (data, postData) => {
@@ -90,82 +84,55 @@ FoEproxy.addHandler('OtherPlayerService', 'rewardPlunder', (data, postData) => {
 			let PlunderedFP = PlunderReward['product']['resources']['strategy_points'];
 
 			StrategyPoints.insertIntoDB({
-				place: 'OtherPlayer',
 				event: 'plunderReward',
 				amount: PlunderedFP,
-				date: moment(MainParser.getCurrentDate()).startOf('day').toDate()
+				date: moment(MainParser.getCurrentDate()).format('YYYY-MM-DD')
 			});
 		}
 	}
 });
 
-// BlueGalaxy event (double PickUp)
-FoEproxy.addHandler('CityProductionService', 'pickupProduction', (data, postData) => {
 
-	if(!StrategyPoints.pickupProductionId){
-		return;
-	}
+// double Collection by Blue Galaxy contains [id, type]
+FoEproxy.addHandler('CityMapService', 'showEntityIcons', (data, postData) => {
+	for(let i in data['responseData']) {
+		if(!data['responseData'].hasOwnProperty(i)) continue;
 
-	const pickUpID = StrategyPoints.pickupProductionId;
-	const d = data['responseData']['updatedEntities'];
+		if (data['responseData'][i]['type'] !== 'citymap_icon_double_collection') continue;
 
-	for(let i in d)
-	{
-		if(!d.hasOwnProperty(i)) continue;
+		let CityMapID = data['responseData'][i]['id'],
+			Building = MainParser.CityMapData[CityMapID],
+			CityEntity = MainParser.CityEntities[Building['cityentity_id']];
 
-		if(pickUpID !== d[i]['id']){
-			return ;
-		}
+		let Production = Productions.readType(Building);
+		if (!Production['products']) continue;
 
-		let id = d[i]['cityentity_id'],
-			name = MainParser.CityEntities[id]['name'],
-			amount;
-
-		// Eventbuildings
-		if(d[i]['type'] === 'residential')
-		{
-			// has this building forge points?
-			if(!d[i]['state']['current_product']['product']['resources']['strategy_points']){
-				return;
-			}
-
-			amount = d[i]['state']['current_product']['product']['resources']['strategy_points'];
-		}
-
-		// Production building like Terrace fields
-		else {
-			let level = d[i]['level'],
-				products = MainParser.CityEntities[id]['entity_levels'][level]['production_values'];
-
-			const product = Object.values(products).filter(f => f['type'] === 'strategy_points');
-
-			amount = product[0]['value'];
-		}
+		let FP = Production['products']['strategy_points'];
+		if (!FP) continue;
 
 		StrategyPoints.insertIntoDB({
-			place: 'pickupProduction',
 			event: 'double_collection',
-			notes: name,
-			amount: amount,
-			date: moment(MainParser.getCurrentDate()).startOf('day').toDate()
+			notes: CityEntity['name'],
+			amount: FP,
+			date: moment(MainParser.getCurrentDate()).format('YYYY-MM-DD')
 		});
 	}
-
-	// reset
-	StrategyPoints.pickupProductionId = null;
 });
 
 
 /**
- * @type {{maxDateFilter: Date, lockDates: [], buildBody: (function(): Promise<void>), caclculateTotal: (function(*=): Promise<number>), intiateDatePicker: (function(): Promise<void>), currentDateFilter: Date, DatePicker: null, ShowFPCollectorBox: (function(): Promise<void>), minDateFilter: null}}
+ * @type {{maxDateFilter, CityMapDataNew: null, buildBody: (function(): Promise<void>), currentDateFilter, calculateTotalByType: (function(*=): number), ShowFPCollectorBox: (function(): Promise<void>), calculateTotal: (function(): number), TodayEntries: null, lockDates: [], ToggleHeader: FPCollector.ToggleHeader, intiateDatePicker: (function(): Promise<void>), getPossibleEventsByDate: (function(): []), DatePicker: null, HandleAdvanceQuest: FPCollector.HandleAdvanceQuest, minDateFilter: null}}
  */
 let FPCollector = {
 
 	minDateFilter: null,
 	maxDateFilter: moment(MainParser.getCurrentDate()).toDate(),
-	currentDateFilter: moment(MainParser.getCurrentDate()).startOf('day').toDate(),
+	currentDateFilter: moment(MainParser.getCurrentDate()).format('YYYY-MM-DD'),
+
+	CityMapDataNew: null,
 
 	lockDates: [],
+	TodayEntries: null,
 
 	DatePicker: null,
 
@@ -190,7 +157,7 @@ let FPCollector = {
 				title: i18n('Menu.fpCollector.Title'),
 				auto_close: true,
 				dragdrop: true,
-				resize: false,
+				resize: true,
 				minimize: true
 			});
 
@@ -216,11 +183,12 @@ let FPCollector = {
 			});
 
 			// get all days without entries and block them in the Litepicker
+			let hidePicker = false;
 			if(startMoment && endMoment)
 			{
 				while (startMoment.isBefore(endMoment, 'day'))
 				{
-					let checkDate = await StrategyPoints.db['ForgePointsStats'].where('date').equals(moment(startMoment).toDate()).toArray();
+					let checkDate = await StrategyPoints.db['ForgePointsStats'].where('date').equals(moment(startMoment).format('YYYY-MM-DD')).toArray();
 
 					if(checkDate.length === 0){
 						FPCollector.lockDates.push(moment(startMoment).format('YYYY-MM-DD'));
@@ -233,10 +201,7 @@ let FPCollector = {
 				let checkPresent = await StrategyPoints.db['ForgePointsStats'].toArray();
 
 				// no? hide the datepicker button
-				if(checkPresent.length === 0)
-				{
-					$('#FPCollectorPicker').hide();
-				}
+				if (checkPresent.length === 0) hidePicker = true;
 			}
 
 			$('#fp-collectorBody').append(
@@ -246,6 +211,8 @@ let FPCollector = {
 				</div>`,
 				`<div id="fp-collectorBodyInner"></div>`
 			);
+
+			if (hidePicker) $('#FPCollectorPicker').hide();
 		}
 
 		FPCollector.buildBody();
@@ -259,51 +226,97 @@ let FPCollector = {
 	 */
 	buildBody: async ()=> {
 
-		let tr = [],
-			entries = await StrategyPoints.db['ForgePointsStats'].where('date').equals(FPCollector.currentDateFilter).toArray();
+		let tr = [];
+		FPCollector.TodayEntries = await StrategyPoints.db['ForgePointsStats'].where('date').equals(FPCollector.currentDateFilter).toArray();
 
-		$('#fp-collector-total-fp').text(await FPCollector.caclculateTotal(FPCollector.currentDateFilter));
+		$('#fp-collector-total-fp').text(await FPCollector.calculateTotal());
 
-		tr.push('<table class="foe-table">');
+		// ${i18n('Boxes.FPCollector.Who')} ${i18n('Boxes.FPCollector.What')}
 
-		tr.push(`<thead>
-			<tr>
-				<th width="1">FPs</th>
-				<th width="1"></th>
-				<th></th>
-				<th>${i18n('Boxes.FPCollector.Who')}</th>
-				<th>${i18n('Boxes.FPCollector.What')}</th>
-			</tr>
-		</thead>`);
 
-		tr.push(`<tbody>`);
-
-		if(entries.length === 0)
+		if(FPCollector.TodayEntries.length === 0)
 		{
-			tr.push(`<tr><td colspan="5" class="text-center" style="padding:15px"><em>${i18n('Boxes.FPCollector.NoEntriesFound')}</em></td></tr>`);
+			tr.push(`<div class="text-center" style="padding:15px"><em>${i18n('Boxes.FPCollector.NoEntriesFound')}</em></div>`);
 		}
 		else {
-			entries.forEach(e => {
 
-				tr.push(`<tr class="${e.place} ${e.event}">
-					<td>
-						<strong class="text-warning">${e.amount}</strong>
-					</td>
-					<td>${e.counter}x</td>
-					<td></td>
-					<td>${i18n('Boxes.FPCollector.' + e.event)}</td>
-					<td>${e.notes ? e.notes : ''}</td>
-				</tr>`);
+			const events = FPCollector.getPossibleEventsByDate();
 
-			});
+			for (const event of events)
+			{
+				const sumTotal = await FPCollector.calculateTotalByType(event);
+				const entriesEvent = await StrategyPoints.db['ForgePointsStats'].where({date: FPCollector.currentDateFilter, event: event}).toArray();
+
+				tr.push(`<div class="fpcollector-accordion ${event}">`);
+
+				tr.push(	`<div class="fpcollector-head game-cursor dark-bg ${event}-head" onclick="FPCollector.ToggleHeader('${event}')">
+								<span class="image"></span>
+								<strong class="text-warning">${sumTotal}</strong>
+								<span>${i18n('Boxes.FPCollector.' + event)}</span>
+							</div>`);
+
+				tr.push(	`<div class="fpcollector-body ${event}-body">`);
+
+				 entriesEvent.forEach(e => {
+					 tr.push(`<div>
+								<span class="fps">${e.amount}</span>
+								<span class="desc">${i18n('Boxes.FPCollector.' + e.event)}</span>
+								<span class="building">${e.notes ? e.notes : ''}</span>
+						</div>`);
+				 });
+
+				tr.push(	`</div>`);
+				tr.push(`</div>`);
+			}
 		}
 
-		tr.push(`</tbody>`);
-		tr.push(`</table>`);
 
 		$('#fp-collectorBodyInner').html(tr.join('')).promise().done(function(){
 			FPCollector.intiateDatePicker();
 		});
+	},
+
+
+	/**
+ * Handles FP collected from Quests
+ * 
+ */
+	HandleAdvanceQuest: (PostData) => {
+		if (PostData['requestData'] && PostData['requestData'][0]) {
+			let QuestID = PostData['requestData'][0];
+
+			for (let Quest of MainParser.Quests) {
+				if (Quest['id'] !== QuestID || Quest['state'] !== 'collectReward') continue;
+
+				// normale Quest-Belohnung
+				if (Quest['genericRewards']) {
+					for (let Reward of Quest['genericRewards']) {
+						if (Reward['subType'] === 'strategy_points') {
+							StrategyPoints.insertIntoDB({
+								place: 'Quest',
+								event: 'collectReward',
+								amount: Reward['amount'],
+								date: moment(MainParser.getCurrentDate()).format('YYYY-MM-DD')
+							});
+						}
+					}
+				}
+
+				// Belohnung einer Schleifenquest
+				if (Quest['rewards']) {
+					for (let Reward of Quest['rewards']) {
+						if (Reward['type'] === 'forgepoint_package') {
+							StrategyPoints.insertIntoDB({
+								place: 'Quest',
+								event: 'collectReward',
+								amount: Number(Reward['subType']),
+								date: moment(MainParser.getCurrentDate()).format('YYYY-MM-DD')
+							});
+						}
+					}
+				}
+			}
+		}
 	},
 
 
@@ -313,15 +326,30 @@ let FPCollector = {
 	 * @param date
 	 * @returns {Promise<number>}
 	 */
-	caclculateTotal: async (date)=> {
+	calculateTotal: async ()=> {
 		let totalFP = 0;
 
 		await StrategyPoints.db['ForgePointsStats']
 			.where('date')
-			.equals(date)
+			.equals(FPCollector.currentDateFilter)
 			.each (entry => totalFP += entry.amount);
 
 		return totalFP;
+	},
+
+
+	calculateTotalByType: async (event)=> {
+		let totalFPByType = 0;
+
+		await StrategyPoints.db['ForgePointsStats']
+			.where({
+				date: FPCollector.currentDateFilter,
+				event: event
+			})
+			.each(entry => totalFPByType += entry.amount)
+		;
+
+		return totalFPByType;
 	},
 
 
@@ -352,9 +380,35 @@ let FPCollector = {
 			onSelect: async (date)=> {
 				$('#FPCollectorPicker').text(`${moment(date).format(i18n('Date'))}`);
 
-				FPCollector.currentDateFilter = moment(date).toDate();
+				FPCollector.currentDateFilter = moment(date).format('YYYY-MM-DD');
 				await FPCollector.buildBody();
 			}
 		});
+	},
+
+
+	getPossibleEventsByDate: ()=> {
+		let available = [];
+
+		FPCollector.TodayEntries.forEach(e => {
+			if(!available.includes(e['event']))
+			{
+				available.push(e['event'])
+			}
+		});
+
+		return available;
+	},
+
+
+	ToggleHeader: (event)=> {
+		let $this = $(`.${event}`),
+			isOpen = $this.hasClass('open');
+
+		$('.fpcollector-accordion').removeClass('open');
+
+		if(!isOpen){
+			$this.addClass('open');
+		}
 	}
 };

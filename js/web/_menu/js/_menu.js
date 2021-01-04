@@ -17,11 +17,19 @@ let _menu = {
 
 	isBottom: false,
 	MenuScrollTop: 0,
+	MenuScrollLeft: 0,
 	SlideParts: 0,
 	ActiveSlide: 1,
 	HudCount: 0,
 	HudLength: 0,
 	HudHeight: 0,
+	HudWidth: 0,
+
+	MenuOptions:[
+		{'BottomBar':"_menu_bottom.BuildOverlayMenu()"},
+		{'RightBar':"_menu_right.BuildOverlayMenu()"},
+		{'Box':"_menu_box.BuildBoxMenu()"}
+	],
 
 	Items: [
 		'calculator',
@@ -41,343 +49,55 @@ let _menu = {
 		'chat',
 		'kits',
 		'greatbuildings',
-		'market'
+		'market',
+		'bluegalaxy',
+		'moppelhelper',
+		'fpCollector'
 	],
 
 
 	/**
+	 * Create the div holders and put them to the DOM
 	 *
+	 * @constructor
 	 */
-	BuildOverlayMenu: () => {
+	CallSelectedMenu: (selMenu = 'BottomBar') => {
 
-		let hud = $('<div />').attr('id', 'foe-helper-hud').addClass('game-cursor'),
-			hudWrapper = $('<div />').attr('id', 'foe-helper-hud-wrapper'),
-			hudInner = $('<div />').attr('id', 'foe-helper-hud-slider');
-
-		hudWrapper.append(hudInner);
-
-
-		let btnUp = $('<span />').addClass('hud-btn-up'),
-			btnDown = $('<span />').addClass('hud-btn-down hud-btn-down-active');
-
-		hud.append(btnUp);
-		hud.append(hudWrapper)
-		hud.append(btnDown);
-
-		$('body').append(hud).ready(function () {
-
-			// Buttons einfügen
-			_menu.ListLinks();
-
-			// korrekten Platz für das Menu ermitteln
-			_menu.SetMenuHeight();
-		});
-
-		window.dispatchEvent(new CustomEvent('foe-helper#menu_loaded'));
-
-		// Wenn sie die Fenstergröße verändert, neu berechnen
-		window.onresize = function (event) {
-			_menu.SetMenuHeight(true);
-		};
-	},
-
-
-	/**
-	 * Sammelfunktion
-	 *
-	 * @param reset
-	 */
-	SetMenuHeight: (reset = true) => {
-		// Höhe ermitteln und setzten
-		_menu.Prepare();
-
-		if (reset) {
-			// Slider nach oben resetten
-			$('#foe-helper-hud-slider').css({
-				'top': '0'
-			});
-
-			_menu.MenuScrollTop = 0;
-			_menu.ActiveSlide = 1;
-
-			$('.hud-btn-up').removeClass('hud-btn-up-active');
-			$('.hud-btn-down').addClass('hud-btn-down-active');
-		}
-	},
-
-
-	/**
-	 * Ermittelt die Fensterhöhe und ermittelt die passende Höhe
-	 *
-	 */
-	Prepare: () => {
-
-		_menu.HudCount = Math.floor((($(window).outerHeight() - 50) - $('#foe-helper-hud').offset().top) / 55);
-
-		// hat der Spieler eine Länge vorgebeben?
-		let MenuLength = localStorage.getItem('MenuLength');
-
-		if (MenuLength !== null && MenuLength < _menu.HudCount) {
-			_menu.HudCount = _menu.HudLength = parseInt(MenuLength);
-		}
-
-		_menu.HudHeight = (_menu.HudCount * 55);
-		_menu.SlideParts = Math.ceil($("#foe-helper-hud-slider").children().length / _menu.HudCount);
-
-		$('#foe-helper-hud').height(_menu.HudHeight + 2);
-		$('#foe-helper-hud-wrapper').height(_menu.HudHeight);
-	},
-
-
-	/**
-	 * Bindet alle benötigten Button ein
-	 *
-	 */
-	ListLinks: () => {
-		let hudSlider = $('#foe-helper-hud-slider'),
-			StorgedItems = localStorage.getItem('MenuSort');
-
-		// Beta-Funktionen
-		if (HelperBeta.active) {
-			_menu.Items.unshift(...HelperBeta.menu);
-		}
-
-		if (StorgedItems !== null) {
-			let storedItems = JSON.parse(StorgedItems);
-
-			// es ist kein neues Item hinzugekommen
-			if (_menu.Items.length === storedItems.length) {
-				_menu.Items = JSON.parse(StorgedItems);
-			}
-
-			// ermitteln in welchem Array was fehlt...
-			else {
-				let missingMenu = storedItems.filter(function (sI) {
-					return !_menu.Items.some(function (mI) {
-						return sI === mI;
-					});
-				});
-
-				let missingStored = _menu.Items.filter(function (mI) {
-					return !storedItems.some(function (sI) {
-						return sI === mI;
-					});
-				});
-
-				_menu.Items = JSON.parse(StorgedItems);
-
-				let items = missingMenu.concat(missingStored);
-
-				// es gibt tatsächlich was neues...
-				if (items.length > 0) {
-					for (let i in items) {
-						if (!items.hasOwnProperty(i)) {
-							break;
-						}
-
-						// ... neues kommt vorne dran ;-)
-						_menu.Items.unshift(items[i]);
-					}
-				}
+		for (let index = 0; index < _menu.MenuOptions.length; index++)
+		{
+			const element = _menu.MenuOptions[index];
+			if(element[selMenu]){
+				eval(element[selMenu]);
 			}
 		}
 
-		// Beta-Funktionen rausfiltern
-		_menu.Items = _menu.Items.filter(e => {
-			if (HelperBeta.active) return true;
-			if (HelperBeta.menu.includes(e)) return false;
-			return true;
-		});
-
-		// Dubletten rausfiltern
-		function unique(arr) {
-			return arr.filter(function (value, index, self) {
-				return self.indexOf(value) === index;
-			});
+		if(Settings.GetSetting('AutoOpenInfoBox')){
+			Infoboard.Show();
 		}
-
-		_menu.Items = unique(_menu.Items);
-
-		// Menüpunkte einbinden
-		for (let i in _menu.Items) {
-			if (!_menu.Items.hasOwnProperty(i)) {
-				break;
-			}
-
-			const name = _menu.Items[i] + '_Btn';
-
-			// gibt es eine Funktion?
-			if (_menu[name] !== undefined) {
-				hudSlider.append(_menu[name]());
-			}
-		}
-
-		_menu.CheckButtons();
 	},
 
 
 	/**
-	 * Panel scrollbar machen
+	 * Versteckt ein Button. Der HUD Slider muss dafür schon befüllt sein
 	 *
+	 * @param buttonId
+	 * @constructor
 	 */
-	CheckButtons: () => {
-
-		let activeIdx = 0;
-
-
-		$('.hud-btn').click(function () {
-			activeIdx = $(this).index('.hud-btn');
-		});
-
-
-		// Klick auf Pfeil nach unten
-		$('body').on('click', '.hud-btn-down-active', function () {
-			_menu.ClickButtonDown();
-		});
-
-
-		// Klick auf Pfeil nach oben
-		$('body').on('click', '.hud-btn-up-active', function () {
-			_menu.ClickButtonUp();
-		});
-
-
-		// Tooltipp top ermitteln und einblenden
-		$('.hud-btn').stop().hover(function () {
-			let $this = $(this),
-				id = $this.attr('id'),
-				y = ($this.offset().top + 30);
-
-			$('[data-btn="' + id + '"]').css({ 'top': y + 'px' }).show();
-
-		}, function () {
-			let id = $(this).attr('id');
-
-			$('[data-btn="' + id + '"]').hide();
-		});
-
-		// Sortierfunktion der Menü-items
-		$('#foe-helper-hud-slider').sortable({
-			placeholder: 'menu-placeholder',
-			axis: 'y',
-			start: function () {
-				$('#foe-helper-hud').addClass('is--sorting');
-			},
-			sort: function () {
-
-				$('.is--sorting .hud-btn-up-active').mouseenter(function (e) {
-					$('.hud-btn-up-active').stop().addClass('hasFocus');
-
-					setTimeout(() => {
-						if ($('.is--sorting .hud-btn-up-active').hasClass('hasFocus')) {
-							_menu.ClickButtonUp();
-						}
-					}, 1000);
-
-				}).mouseleave(function () {
-					$('.is--sorting .hud-btn-up-active').removeClass('hasFocus');
-				});
-
-				$('.is--sorting .hud-btn-down-active').mouseenter(function (e) {
-					$('.is--sorting .hud-btn-down-active').stop().addClass('hasFocus');
-
-					setTimeout(() => {
-						if ($('.is--sorting .hud-btn-down-active').hasClass('hasFocus')) {
-							_menu.ClickButtonDown();
-						}
-					}, 1000);
-
-				}).mouseleave(function () {
-					$('.is--sorting .hud-btn-down-active').removeClass('hasFocus');
-				});
-			},
-			stop: function () {
-				_menu.Items = [];
-
-				$('.hud-btn').each(function () {
-					_menu.Items.push($(this).data('slug'));
-				});
-
-				localStorage.setItem('MenuSort', JSON.stringify(_menu.Items));
-
-				$('#foe-helper-hud').removeClass('is--sorting');
-			}
-		});
-
-		HiddenRewards.SetCounter();
-	},
-
-
-	/**
-	 * Klick Funktion
-	 */
-	ClickButtonDown: () => {
-		$('.hud-btn-down').removeClass('hasFocus');
-
-		_menu.ActiveSlide++;
-		_menu.MenuScrollTop -= _menu.HudHeight;
-
-		$('#foe-helper-hud-slider').css({
-			'top': _menu.MenuScrollTop + 'px'
-		});
-
-		if (_menu.ActiveSlide > 1) {
-			$('.hud-btn-up').addClass('hud-btn-up-active');
-		}
-
-		if (_menu.ActiveSlide === _menu.SlideParts) {
-			$('.hud-btn-down').removeClass('hud-btn-down-active');
-
-		} else if (_menu.ActiveSlide < _menu.SlideParts) {
-			$('.hud-btn-down').addClass('hud-btn-down-active');
-		}
-	},
-
-
-	/**
-	 * Klick Funktion
-	 */
-	ClickButtonUp: () => {
-		$('.hud-btn-up').removeClass('hasFocus');
-
-		_menu.ActiveSlide--;
-		_menu.MenuScrollTop += _menu.HudHeight;
-
-		$('#foe-helper-hud-slider').css({
-			'top': _menu.MenuScrollTop + 'px'
-		});
-
-		if (_menu.ActiveSlide === 1) {
-			$('.hud-btn-up').removeClass('hud-btn-up-active');
-		}
-
-		if (_menu.ActiveSlide < _menu.SlideParts) {
-			$('.hud-btn-down').addClass('hud-btn-down-active');
-
-		} else if (_menu.ActiveSlide === _menu.SlideParts) {
-			$('.hud-btn-down').removeClass('hud-btn-down-active');
-		}
-	},
-
-	/**
-     * Versteckt ein Button. Der HUD Slider muss dafür schon befüllt sein
-     *
-     * @param d
-     * @returns {{msg: string, type: string, class: string}}
-     */
 	HideButton: (buttonId) => {
 		if ($('#foe-helper-hud-slider').has(`div#${buttonId}`).length > 0)
 			$($('#foe-helper-hud-slider').children(`div#${buttonId}`)[0]).hide();
 
 	},
 
+
 	/**
-	 * Zeigt ein versteckten Button wieder.
+	 * Shows a hidden button again
 	 */
 	ShowButton: (buttonId) => {
 		if ($('#foe-helper-hud-slider').has(`div#${buttonId}`))
 			$($('#foe-helper-hud-slider').children(`div#${buttonId}`)[0]).show();
 	},
+
 
 	/**
 	 * Tooltip Box
@@ -393,6 +113,22 @@ let _menu = {
 		ToolTipp.prepend($('<div />').addClass('toolTipHeader').text(title));
 
 		$('body').append(ToolTipp);
+	},
+
+
+	/**
+	 * Checks whether anything has changed in the sorting of the items.
+	 *
+	 * @param storedItems
+	 * @returns {boolean}
+	 */
+	equalTo: (storedItems) => {
+		for (let i = 0; i < storedItems.length; i++) {
+			// Es hat sich etwas an der Sortierung verändert
+			if (storedItems[i] !== _menu.Items[i]) return false;
+		}
+
+		return true;
 	},
 
 	/*----------------------------------------------------------------------------------------------------------------*/
@@ -835,7 +571,11 @@ let _menu = {
 		let OwnGalaxy = Object.values(MainParser.CityMapData).find(obj => (obj['cityentity_id'] === 'X_OceanicFuture_Landmark3'));;
 
 		// no BG => display none
-		if (!OwnGalaxy) return;
+		if (!OwnGalaxy) {
+			let index = _menu.Items.indexOf('bluegalaxy');
+			delete _menu.Items[index];
+			return;
+		}
 
 		let btn = $('<div />').attr({ 'id': 'bluegalaxy-Btn', 'data-slug': 'bluegalaxy' }).addClass('hud-btn');
 
@@ -857,6 +597,11 @@ let _menu = {
 	 * Moppelassistent
 	 * */
 	moppelhelper_Btn: () => {
+		// active?
+		if(!Settings.GetSetting('ShowPlayersMotivation')){
+			return;
+		}
+
 		let btn = $('<div />').attr({ 'id': 'moppelhelper-Btn', 'data-slug': 'moppelhelper' }).addClass('hud-btn');
 
 		// Tooltip einbinden
@@ -886,6 +631,28 @@ let _menu = {
 
 		btn_sp.on('click', function () {
 			FPCollector.ShowFPCollectorBox();
+		});
+
+		btn.append(btn_sp);
+
+		return btn;
+	},
+
+	/**
+	 * Shows the box for managing all alerts
+	 *
+	 * @returns {*|jQuery}
+	 */
+	alerts_Btn: () => {
+		let btn = $('<div />').attr({ 'id': 'Alerts-Btn', 'data-slug': 'Alerts' }).addClass('hud-btn');
+
+		// Tooltip einbinden
+		_menu.toolTippBox(i18n('Menu.Alerts.Title'), i18n('Menu.Alerts.Desc'), 'Alerts-Btn');
+
+		let btn_sp = $('<span />');
+
+		btn_sp.on('click', function () {
+			Alerts.show();
 		});
 
 		btn.append(btn_sp);

@@ -19,6 +19,9 @@ let Parts = {
 	IsPreviousLevel: false,
 	IsNextLevel: false,
 
+	LockExistingPlaces: true,
+	TrustExistingPlaces: false,
+
 	Level: undefined,
 	SafePlaces: undefined,
 	Maezens: [],
@@ -308,14 +311,21 @@ let Parts = {
 
         for (let i = 0; i < 5; i++) {
 			if (FPRewards[i] <= Parts.Maezens[i] || Rest <= Parts.Maezens[i]) {
-				Eigens[i] = Math.ceil(Rest + (Parts.Maezens[i + 1] !== undefined ? Parts.Maezens[i + 1] : 0) - Parts.Maezens[i]);
-				Eigens[i] = Math.max(Eigens[i], 0);
-				Rest -= Eigens[i];
+				if (Parts.LockExistingPlaces) { //Bestehende Einzahlung absichern
+					let NextMaezen = Parts.Maezens[i + 1] !== undefined ? Parts.Maezens[i + 1] : 0;
+					Eigens[i] = Math.ceil(Rest + (Parts.TrustExistingPlaces ? 0 : NextMaezen) - Parts.Maezens[i]);
+					Eigens[i] = Math.max(Eigens[i], 0);
+					Rest -= Eigens[i];
+				}
+				else {
+					Eigens[i] = 0;
+                }
                 continue;
             }
 
-			Eigens[i] = Math.ceil(Rest + Parts.Maezens[i] - 2 * FPRewards[i]);
-            if (Eigens[i] < 0) {
+			Eigens[i] = Math.ceil(Rest + (Parts.TrustExistingPlaces ? 0 : Parts.Maezens[i]) - 2 * FPRewards[i]);
+			if (Eigens[i] < 0) {
+				if (Parts.TrustExistingPlaces) Eigens[i] = (Math.min(Eigens[i] + Parts.Maezens[i], 0));
                 Dangers[i] = Math.floor(0 - Eigens[i]/2);
                 Eigens[i] = 0;
             }
@@ -396,6 +406,7 @@ let Parts = {
 
         h.push('</td>');
         h.push('<td class="text-right">');
+        h.push('<span class="btn-group">');
 
 		// different arc bonus-buttons
 		let investmentSteps = [80,85,90];
@@ -405,6 +416,7 @@ let Parts = {
 			h.push(`<button class="btn btn-default btn-set-arc${( Parts.CurrentBuildingPercents[0] === bonus ? ' btn-default-active' : '')}" data-value="${bonus}">${bonus}%</button>`);
 		});
 
+        h.push('</span>');
         h.push('</td>');
         h.push('</tr></table>');
 
@@ -537,8 +549,15 @@ let Parts = {
 		Parts.BuildBackgroundBody(Parts.Maezens, Eigens, NonExts);
 
         // Wieviel fehlt noch bis zum leveln?
-		if (Parts.IsPreviousLevel === false && !Parts.IsNextLevel) {
-			let rest = (Parts.CityMapEntity['state']['invested_forge_points'] === undefined ? Parts.CityMapEntity['state']['forge_points_for_level_up'] : Parts.CityMapEntity['state']['forge_points_for_level_up'] - Parts.CityMapEntity['state']['invested_forge_points']);
+		if (Parts.IsPreviousLevel === false) {
+			let rest;
+			if (Parts.IsNextLevel) {
+				rest = Total;
+			}
+			else {
+				rest = Parts.CityMapEntity['state']['invested_forge_points'] === undefined ? Parts.CityMapEntity['state']['forge_points_for_level_up'] : Parts.CityMapEntity['state']['forge_points_for_level_up'] - Parts.CityMapEntity['state']['invested_forge_points'];
+			}
+
             h.push('<div class="text-center dark-bg d-flex" style="padding:5px 0;">');
             h.push('<em style="width:70%">' + i18n('Boxes.Calculator.Up2LevelUp') + ': <span id="up-to-level-up">' + HTML.Format(rest) + '</span> ' + i18n('Boxes.Calculator.FP') + '</em>');
 
@@ -949,10 +968,28 @@ let Parts = {
 				'minimize': true,
 			});
 
-			$('#PowerLevelingBox').on('blur', '#maxlevel', function () {
+			const box = $('#PowerLevelingBox');
+			box.on('blur', '#maxlevel', function () {
 				Parts.PowerLevelingMaxLevel = parseFloat($('#maxlevel').val());
-				Parts.CalcBodyPowerLeveling();
-			});			
+				Parts.UpdateTableBodyPowerLeveling();
+				//Parts.CalcBodyPowerLeveling();
+			});
+			box.on('keydown', '#maxlevel', function (e) {
+				const key = e.key;
+				const input = e.target;
+				if (key === "ArrowUp") {
+					Parts.PowerLevelingMaxLevel = Number.parseInt(input.value) + 1;
+					Parts.UpdateTableBodyPowerLeveling();
+					e.preventDefault();
+				} else if (key === "ArrowDown") {
+					Parts.PowerLevelingMaxLevel = Number.parseInt(input.value) - 1;
+					Parts.UpdateTableBodyPowerLeveling();
+					e.preventDefault();
+				} else if (key === "Enter") {
+					Parts.PowerLevelingMaxLevel = Number.parseInt(input.value);
+					Parts.UpdateTableBodyPowerLeveling();
+				}
+			});
 		}
 
 		// Body zusammen fummeln
@@ -960,12 +997,12 @@ let Parts = {
 	},
 
 
-	CalcBodyPowerLeveling: () => {
+	CalcBodyPowerLevelingData: () => {
 		let EntityID = Parts.CityMapEntity['cityentity_id'],
 			CityEntity = MainParser.CityEntities[EntityID],
 			EraName = GreatBuildings.GetEraName(EntityID),
 			Era = Technologies.Eras[EraName],
-			MinLevel = Parts.CityMapEntity['level'],
+			MinLevel = Parts.Level,
 			MaxLevel = Math.min(Parts.PowerLevelingMaxLevel, GreatBuildings.Rewards[Era].length);
 
 		let Totals = [],
@@ -1013,7 +1050,81 @@ let Parts = {
 
 			EigenNettos[i] = EigenBruttos[i] - DoubleCollections[i];
 			OwnPartSum += EigenNettos[i];
+		}
+
+		return {
+			HasDoubleCollection,
+			Places,
+			CityEntity,
+			OwnPartSum,
+			MinLevel,
+			MaxLevel,
+			EigenBruttos,
+			DoubleCollections,
+			EigenNettos
+		};
+	},
+
+	CalcTableBodyPowerLeveling: (h, data) => {
+		const {
+			HasDoubleCollection,
+			Places,
+			MinLevel,
+			MaxLevel,
+			EigenBruttos,
+			DoubleCollections,
+			EigenNettos
+		} = data;
+
+		for (let i = MinLevel; i < MaxLevel; i++) {
+			h.push('<tr>');
+			h.push('<td style="white-space:nowrap">' + i + ' → ' + (i + 1) + '</td>');
+			h.push('<td class="bright">' + HTML.Format(Places[i][0]) + '</td>');
+			h.push('<td class="bright">' + HTML.Format(Places[i][1]) + '</td>');
+			h.push('<td class="bright">' + HTML.Format(Places[i][2]) + '</td>');
+			h.push('<td class="bright">' + HTML.Format(Places[i][3]) + '</td>');
+			h.push('<td class="bright">' + HTML.Format(Places[i][4]) + '</td>');
+			if (HasDoubleCollection) {
+				h.push('<td class="success"><strong>' + HTML.Format(EigenBruttos[i]) + '</strong></td>');
+				h.push('<td>' + HTML.Format(MainParser.round(DoubleCollections[i])) + '</td>');
+			}
+			h.push('<td><strong class="info">' + HTML.Format(MainParser.round(EigenNettos[i])) + '</strong></td>');
+			h.push('</tr>');
         }
+	},
+
+	UpdateTableBodyPowerLeveling: () => {
+		const tableBody = document.getElementById('PowerLevelingBoxTableBody');
+		if (tableBody) {
+			const data = Parts.CalcBodyPowerLevelingData();
+			/** @type {string[]} */
+			const h = [];
+			
+			Parts.CalcTableBodyPowerLeveling(h, data);
+
+			tableBody.innerHTML = h.join('');
+
+			const maxlevel = /** @type {HTMLInputElement} */(document.getElementById('maxlevel'));
+			if (maxlevel.value != ''+data.MaxLevel) {
+				maxlevel.value = ''+data.MaxLevel;
+			}
+			Parts.PowerLevelingMaxLevel = data.MaxLevel;
+
+			const ownPartSum = /** @type {HTMLElement} */(document.getElementById('PowerLevelingBoxOwnPartSum'));
+			ownPartSum.innerText = HTML.Format(MainParser.round(data.OwnPartSum));
+		}
+
+	},
+
+	CalcBodyPowerLeveling: () => {
+		const data = Parts.CalcBodyPowerLevelingData();
+
+		const {
+			HasDoubleCollection,
+			CityEntity,
+			OwnPartSum,
+			MaxLevel,
+		} = data;
 
 		let h = [];
 
@@ -1022,7 +1133,7 @@ let Parts = {
 
 		h.push('<div class="d-flex justify-content-center">');
 		h.push('<div style="margin: 5px 10px 0 0;">' + i18n('Boxes.PowerLeveling.MaxLevel') + ': <input type="number" id="maxlevel" step="1" min=10" max="1000" value="' + MaxLevel + '""></div>');
-		h.push('<div>' + i18n('Boxes.PowerLeveling.OwnPartSum') + ': <strong class="info">' + HTML.Format(MainParser.round(OwnPartSum)) + '</strong></div>')
+		h.push('<div>' + i18n('Boxes.PowerLeveling.OwnPartSum') +': <strong class="info" id="PowerLevelingBoxOwnPartSum">'+ HTML.Format(MainParser.round(OwnPartSum)) + '</strong></div>')
 		h.push('</div>');
 		h.push('</div>');
 
@@ -1045,22 +1156,8 @@ let Parts = {
 		h.push('</tr>');
 		h.push('</thead>');
 
-		h.push('<tbody>');
-		for (let i = MinLevel; i < MaxLevel; i++) {
-			h.push('<tr>');
-			h.push('<td style="white-space:nowrap">' + i + ' → ' + (i + 1) + '</td>');
-			h.push('<td class="bright">' + HTML.Format(Places[i][0]) + '</td>');
-			h.push('<td class="bright">' + HTML.Format(Places[i][1]) + '</td>');
-			h.push('<td class="bright">' + HTML.Format(Places[i][2]) + '</td>');
-			h.push('<td class="bright">' + HTML.Format(Places[i][3]) + '</td>');
-			h.push('<td class="bright">' + HTML.Format(Places[i][4]) + '</td>');
-			if (HasDoubleCollection) {
-				h.push('<td class="success"><strong>' + HTML.Format(EigenBruttos[i]) + '</strong></td>');
-				h.push('<td>' + HTML.Format(MainParser.round(DoubleCollections[i])) + '</td>');
-			}
-			h.push('<td><strong class="info">' + HTML.Format(MainParser.round(EigenNettos[i])) + '</strong></td>');
-			h.push('</tr>');
-        }
+		h.push('<tbody id="PowerLevelingBoxTableBody">');
+		Parts.CalcTableBodyPowerLeveling(h, data);
 		h.push('</tbody>');
 
 		h.push('</table>');
