@@ -17,12 +17,21 @@ let _menu = {
 
 	isBottom: false,
 	MenuScrollTop: 0,
+	MenuScrollLeft: 0,
 	SlideParts: 0,
 	ActiveSlide: 1,
 	HudCount: 0,
 	HudLength: 0,
 	HudHeight: 0,
 	isDraggable: true,
+
+	HudWidth: 0,
+
+	MenuOptions:[
+		{'BottomBar':"_menu_bottom.BuildOverlayMenu()"},
+		{'RightBar':"_menu_right.BuildOverlayMenu()"},
+		{'Box':"_menu_box.BuildBoxMenu()"}
+	],
 
 	Items: [
 		'calculator',
@@ -47,11 +56,15 @@ let _menu = {
 		'bluegalaxy',
 		'moppelhelper',
 		'fpCollector',
+		// 'alerts',
+		// 'unitsGex',
 	],
 
 
 	/**
+	 * Create the div holders and put them to the DOM
 	 *
+	 * @constructor
 	 */
 	BuildOverlayMenu: () => {
 		if (_menu.isDraggable)
@@ -218,9 +231,24 @@ let _menu = {
 			
 			const name = _menu.Items[index].slug + '_Btn';
 
-			// gibt es eine Funktion?
-			if (_menu[name] !== undefined) {
-				hudSlider.append(_menu[name]());
+			for (let index = 0; index < _menu.MenuOptions.length; index++)
+			{
+				const element = _menu.MenuOptions[index];
+				if(element[selMenu]){
+					eval(element[selMenu]);
+				}
+			});
+	
+			_menu.CheckButtons();
+		},
+
+	CallSelectedMenu: (selMenu = 'BottomBar') => {
+
+		for (let index = 0; index < _menu.MenuOptions.length; index++)
+		{
+			const element = _menu.MenuOptions[index];
+			if(element[selMenu]){
+				eval(element[selMenu]);
 			}
 		});
 
@@ -488,6 +516,8 @@ let _menu = {
 
 		} else if (_menu.ActiveSlide === _menu.SlideParts){
 			$('.hud-btn-down').removeClass('hud-btn-down-active');
+		if(Settings.GetSetting('AutoOpenInfoBox')){
+			Infoboard.Show();
 		}
 	},
 
@@ -505,7 +535,7 @@ let _menu = {
 
 
 	/**
-	 * Zeigt ein versteckten Button wieder.
+	 * Shows a hidden button again
 	 */
 	ShowButton: (buttonId) => {
 		if ($('#foe-helper-hud-slider').has(`div#${buttonId}`))
@@ -572,6 +602,20 @@ let _menu = {
 				it.posY = top;
 			}
 		}); 
+	},
+	/**
+	 * Checks whether anything has changed in the sorting of the items.
+	 *
+	 * @param storedItems
+	 * @returns {boolean}
+	 */
+	equalTo: (storedItems) => {
+		for (let i = 0; i < storedItems.length; i++) {
+			// Es hat sich etwas an der Sortierung verändert
+			if (storedItems[i] !== _menu.Items[i]) return false;
+		}
+
+		return true;
 	},
 
 	/*----------------------------------------------------------------------------------------------------------------*/
@@ -1046,7 +1090,11 @@ let _menu = {
 		let OwnGalaxy = Object.values(MainParser.CityMapData).find(obj => (obj['cityentity_id'] === 'X_OceanicFuture_Landmark3'));;
 
 		// no BG => display none
-		if (!OwnGalaxy) return;
+		if (!OwnGalaxy) {
+			let index = _menu.Items.indexOf('bluegalaxy');
+			delete _menu.Items[index];
+			return;
+		}
 
 		let btn = $('<div />').attr({ 'id': 'bluegalaxy-Btn', 'data-slug': 'bluegalaxy' }).addClass('hud-btn');
 
@@ -1111,6 +1159,50 @@ let _menu = {
 
 		btn_sp.on('click', function () {
 			FPCollector.ShowFPCollectorBox();
+		});
+
+		btn.append(btn_sp);
+
+		return btn;
+	},
+
+	/**
+	 * Shows the box for managing all alerts
+	 *
+	 * @returns {*|jQuery}
+	 */
+	alerts_Btn: () => {
+		let btn = $('<div />').attr({ 'id': 'Alerts-Btn', 'data-slug': 'Alerts' }).addClass('hud-btn');
+
+		// Tooltip einbinden
+		_menu.toolTippBox(i18n('Menu.Alerts.Title'), i18n('Menu.Alerts.Desc'), 'Alerts-Btn');
+
+		let btn_sp = $('<span />');
+
+		btn_sp.on('click', function () {
+			Alerts.show();
+		});
+
+		btn.append(btn_sp);
+
+		return btn;
+	},
+
+	/**
+	 * Shows the box for gex units stats
+	 *
+	 * @returns {*|jQuery}
+	 */
+	unitsGex_Btn: () => {
+		let btn = $('<div />').attr({ 'id': 'unitsGex-Btn', 'data-slug': 'unitsGex' }).addClass('hud-btn');
+
+		// Tooltip einbinden
+		_menu.toolTippBox(i18n('Menu.unitsGex.Title'), i18n('Menu.unitsGex.Desc'), 'unitsGex-Btn');
+
+		let btn_sp = $('<span />');
+
+		btn_sp.on('click', function () {
+			UnitGex.showBox();
 		});
 
 		btn.append(btn_sp);

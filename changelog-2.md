@@ -1,5 +1,156 @@
 ## Changelog - Extension
 
+
+##### 2.5.4.3
+
+**Update**
+- Production overview:
+    - [#1647](https://github.com/dsiekiera/foe-helfer-extension/issues/1647) [#1662](https://github.com/dsiekiera/foe-helfer-extension/issues/1662) From now on you can see what is ready and can be harvested in green colour in the top right corner of each tab
+
+**Bugfix**
+- Extension:
+    - Compatibility with older browsers restored
+
+- Marketplace Filter:
+    - [#1723](https://github.com/dsiekiera/foe-helfer-extension/issues/1723) The content of the marketplace filter was not displayed, Goes now again
+
+- Production overview:
+    - [#1726](https://github.com/dsiekiera/foe-helfer-extension/issues/1726) Event buildings that are not connected to a road still produce population, this has been fixed
+
+---
+
+##### 2.5.4.2
+
+**Update**
+- Production overview:
+    - Alcatraz added to the overview for "units"
+
+- FP Collector:
+    - Arrows added to show that you can expand the entries
+
+- Infobox:
+    - [#1704](https://github.com/dsiekiera/foe-helfer-extension/issues/1704) Can now be loaded with the game start if desired => "Settings > Boxes > Infobox".
+    - [#1416](https://github.com/dsiekiera/foe-helfer-extension/issues/1416) Can be limited to one length from now on => "Settings > Boxes > Infobox News" to spare the browser with very many entries
+    - The entries of the infobox are saved if it is only closed and opened again
+
+
+**Bugfix**
+- Extension:
+    - [#1720](https://github.com/dsiekiera/foe-helfer-extension/issues/1720) Filter in Moppelassistent reacts wrong if infobox is open
+    - [#1707](https://github.com/dsiekiera/foe-helfer-extension/issues/1707) Some messages were not displayed
+
+- Menu box:
+    - [#1717](https://github.com/dsiekiera/foe-helfer-extension/issues/1717) When the box is on top of the border, the tooltips disappeared outside the visible area
+
+- Production overview:
+    - [#1709](https://github.com/dsiekiera/foe-helfer-extension/issues/1709) The box became too long, it is now scrollable again
+
+- Infobox:
+    - [#1694](https://github.com/dsiekiera/foe-helfer-extension/issues/1694) Fixed wrong translation in filter "GvG" => "GG"
+    - The message filter is now case-insensitive (case is ignored)
+
+- Moppelhelfer:
+    - [#1658](https://github.com/dsiekiera/foe-helfer-extension/issues/1658) Date detection for CZ fixed
+
+---
+
+##### 2.5.4.1 
+
+**Bugfix**
+- Menu:
+    - [#1701](https://github.com/dsiekiera/foe-helfer-extension/issues/1701) [#1702](https://github.com/dsiekiera/foe-helfer-extension/issues/1702) in older browsers the helper could not be loaded
+
+- Production overview:
+    - [#1696](https://github.com/dsiekiera/foe-helfer-extension/issues/1696) In some browsers the table was not wide enough
+
+- Extension:
+    - [#1699](https://github.com/dsiekiera/foe-helfer-extension/issues/1699) Notifications were displayed despite deactivation
+
+---
+
+##### 2.5.4.0
+
+**New**
+- Menu:
+    - [#1664](https://github.com/dsiekiera/foe-helfer-extension/issues/1664) [#1665](https://github.com/dsiekiera/foe-helfer-extension/issues/1665) There are now 3 menu variants (right, bottom and box).
+    - Selectable via "Settings > General > Change Menu".
+    - Redesign (smaller, new graphics) of the bottom and box variant for more space
+
+- Extension:
+    - Notifications can now be switched off via "Settings > General > Notification".
+    - The notifications can appear at different positions "Settings > General > Notification positions".
+
+**Update**
+- City overview:
+    - [#1659](https://github.com/dsiekiera/foe-helfer-extension/issues/1659) Translations for the statistics have been added
+
+- Blue Galaxy Helper:
+    - [#1653](https://github.com/dsiekiera/foe-helfer-extension/issues/1653) can now weight by goods. If you only want to weight by FP, change the value to "0" (zero).
+
+- Production overview:
+    - [#1646](https://github.com/dsiekiera/foe-helfer-extension/issues/1646) now updates when harvest is collected with diamonds
+
+- Infobox:
+    - [#1552](https://github.com/dsiekiera/foe-helfer-extension/issues/1552) from now on you can search for a text in the filter
+
+- Extension:
+    - many translations from [i18n.foe-helper.com](http://i18n.foe-helper.com/projects/foe-helper/extension/) have been integrated. Help us to integrate even more translations and register yourself
+
+**Bugfix**
+- FP Collector:
+    - [#1690](https://github.com/dsiekiera/foe-helfer-extension/issues/1690) the collector did not count all duplications
+    - [#1693](https://github.com/dsiekiera/foe-helfer-extension/issues/1693) fixed translation error
+
+- Extension:
+    - [#1687](https://github.com/dsiekiera/foe-helfer-extension/issues/1687) in Firefox not all translations were loaded
+
+- Menu:
+    - [#1681](https://github.com/dsiekiera/foe-helfer-extension/issues/1681) the drag&drop was too sensitive and always gave the message "The new menu order has been saved", we have changed that
+
+
+---
+
+##### 2.5.3.2
+
+**BugFix**
+- FP Collector:
+    - A small bug prevented the menu button
+
+---
+
+##### 2.5.3.2
+
+**BugFix**
+- FP Collector:
+    - A small bug prevented the menu button
+
+---
+
+
+##### 2.5.3.1
+
+**New**
+
+- FP Collector:
+    - Collects by day and by type all FPs you collect in the whole game to create a complete overview of your "by the way" FPs
+
+**Update**
+
+- Menu:
+    - [#1661](https://github.com/dsiekiera/foe-helfer-extension/issues/1661) [#1657](https://github.com/dsiekiera/foe-helfer-extension/issues/1657) Because of the new dynamic menu, the helper's menu moves to the bottom
+
+- Motivation Helper:
+    - The values can be sorted via the tab head
+    - Filter for various events [#1652](https://github.com/dsiekiera/foe-helfer-extension/issues/1652)
+    - Coloured values for better differentiation
+
+**BugFix**
+
+- Event helper:
+    - [#1655](https://github.com/dsiekiera/foe-helfer-extension/issues/1655) Incorrect recognition of the daily price Football Event 2021
+
+---
+
 ##### 2.5.3.0
 
 **New**
