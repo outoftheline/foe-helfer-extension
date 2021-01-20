@@ -174,7 +174,7 @@ let Stats = {
 	// State for UI
 	state: {
 		source: 'statsTreasurePlayerH', // Source of data - indexdb table name
-		chartType: 'streamgraph', // chart type
+		chartType: 'line', // chart type
 		eras: {}, // Selected era for filtering data,
 		eraSelectOpen: false, // Dropdown
 		isGroupByEra: false,
@@ -510,11 +510,13 @@ let Stats = {
 				</div>
 				<div class="option-era-wrap text-center">
 					<strong>${i18n('Boxes.Stats.Era')}:</strong> ${btnGroupByEra}<br>
+					<span class="btn-group">
 					${btnSelectAllEra}
 					${btnSelectMyEra}
 					${CurrentEraID > 2 ? btnSelectTwoLastEra : ''}
 					${btnSelectAll}
 					${btnSelectNoEra}
+					</span>
 				</div>
 				<div class="tabs">
 					<ul class="horizontal">
@@ -523,7 +525,9 @@ let Stats = {
 				</div>
 				<div class="option-chart-type-wrap text-center">
 					${btnTglAnnotations}<br>
+					<span class="btn-group">
 					${chartTypes.join('')}
+					</span>
 				</div>`;
 	},
 
@@ -646,7 +650,7 @@ let Stats = {
 	 * @param disabled	Disabled button
 	 * @returns {string}
 	 */
-	RenderButton: ({ name, isActive, dataType, value, title, disabled }) => `<button ${disabled ? 'disabled' : ''} class="btn btn-default btn-tight${!disabled && isActive ? ' btn-green' : ''}" data-type="${dataType}" data-value="${value}" title="${(title || '').replace(/"/g,'&quot;')}">${name}</button>`,
+	RenderButton: ({ name, isActive, dataType, value, title, disabled }) => `<button ${disabled ? 'disabled' : ''} class="btn btn-default btn-tight${!disabled && isActive ? ' btn-default-active' : ''}" data-type="${dataType}" data-value="${value}" title="${(title || '').replace(/"/g,'&quot;')}">${name}</button>`,
 
 
 	/**

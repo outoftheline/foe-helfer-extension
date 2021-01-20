@@ -36,17 +36,17 @@ FoEproxy.addHandler('ConversationService', 'getOverview', (data, postData) => {
 });
 
 // when a great building where the player has invested has been levelled
-FoEproxy.addHandler('BlueprintService','newReward', (data, postData) => {
+FoEproxy.addHandler('BlueprintService', 'newReward', (data, postData) => {
 
-    if ( data && data['responseData'] && data['responseData'] ) {
+    if (data && data['responseData'] && data['responseData']) {
         // save the number of returned FPs to show in the infoboard message
-        Info.ReturnFPPoints = ( data['responseData']['strategy_point_amount'] ) ? data.responseData.strategy_point_amount : 0;
+        Info.ReturnFPPoints = (data['responseData']['strategy_point_amount']) ? data.responseData.strategy_point_amount : 0;
 
         // If the Info.OtherPlayerService_newEventgreat_building_contribution ran earlier than this
         // the ReturnFPPoints was 0 so no message was posted. Therefore recreate the message using
         // the stored data (and the correct value of Info.ReturnFPPoints) and post it
-        if ( Info.ReturnFPMessageData ){
-            let bd = Info.OtherPlayerService_newEventgreat_building_contribution( Info.ReturnFPMessageData );
+        if (Info.ReturnFPMessageData) {
+            let bd = Info.OtherPlayerService_newEventgreat_building_contribution(Info.ReturnFPMessageData);
             Info.ReturnFPMessageData = null;
             Infoboard.PostMessage(bd);
         }
@@ -56,15 +56,18 @@ FoEproxy.addHandler('BlueprintService','newReward', (data, postData) => {
 
 /**
  *
- * @type {{init: Infoboard.init, Show: InfoBoard.Show, InjectionLoaded: boolean, ResetBox: Infoboard.ResetBox, BoxContent: Infoboard.BoxContent, FilterInput: Infoboard.FilterInput, SoundFile: HTMLAudioElement, Box: Infoboard.Box, PlayInfoSound: null}}
+ * @type {{init: Infoboard.init, Show: InfoBoard.Show, InjectionLoaded: boolean, ResetBox: Infoboard.ResetBox, BoxContent: Infoboard.BoxContent, FilterInput: Infoboard.FilterInput, SoundFile: HTMLAudioElement, Box: Infoboard.Box, PlayInfoSound: null, History: Array, MaxEntries:Number}}
  */
 let Infoboard = {
 
     InjectionLoaded: false,
     PlayInfoSound: true,
     SoundFile: new Audio(extUrl + 'vendor/sounds/ping.mp3'),
-    SavedFilter: ["auction", "gex", "gbg", "trade", "level", "msg"],
+    SavedFilter: ["auction", "gex", "gbg", "trade", "level", "msg", "text"],
+    SavedTextFilter: "",
     DebugWebSocket: false,
+    History: [],
+    MaxEntries: 0,
 
 
     /**
@@ -117,6 +120,12 @@ let Infoboard = {
             else
                 Infoboard.SavedFilter = JSON.parse(localStorage.getItem("infoboxSavedFilter"));
 
+            if (localStorage.getItem("infoboxTextFilter") === null)
+                localStorage.setItem("infoboxTextFilter", Infoboard.SavedTextFilter);
+            else
+                Infoboard.SavedTextFilter = localStorage.getItem("infoboxTextFilter");
+
+
             HTML.Box({
                 'id': 'BackgroundInfo',
                 'title': i18n('Boxes.Infobox.Title'),
@@ -132,7 +141,7 @@ let Infoboard = {
 
         } else {
             return HTML.CloseOpenBox('BackgroundInfo');
-		}
+        }
 
         let div = $('#BackgroundInfo'),
             h = [];
@@ -141,7 +150,7 @@ let Infoboard = {
         h.push('<div class="filter-row">');
 
         h.push('<div class="dropdown">');
-        h.push('<input type="checkbox" class="dropdown-checkbox" id="checkbox-toggle"><label class="dropdown-label game-cursor" for="checkbox-toggle">' + i18n('Boxes.Infobox.Filter') + '</label><span class="arrow"></span>');
+        h.push('<input type="checkbox" class="dropdown-checkbox" id="infobox-checkbox-toggle"><label class="dropdown-label game-cursor" for="infobox-checkbox-toggle">' + i18n('Boxes.Infobox.Filter') + '</label><span class="arrow"></span>');
 
         h.push('<ul>');
         h.push('<li><label class="game-cursor"><input type="checkbox" data-type="auction" class="filter-msg game-cursor" ' + (Infoboard.SavedFilter.includes("auction") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterAuction') + '</label></li>');
@@ -150,6 +159,7 @@ let Infoboard = {
         h.push('<li><label class="game-cursor"><input type="checkbox" data-type="trade" class="filter-msg game-cursor" ' + (Infoboard.SavedFilter.includes("trade") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterTrade') + '</label></li>');
         h.push('<li><label class="game-cursor"><input type="checkbox" data-type="level" class="filter-msg game-cursor" ' + (Infoboard.SavedFilter.includes("level") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterLevel') + '</label></li>');
         h.push('<li><label class="game-cursor"><input type="checkbox" data-type="msg" class="filter-msg game-cursor" ' + (Infoboard.SavedFilter.includes("msg") ? "checked" : "") + '> ' + i18n('Boxes.Infobox.FilterMessage') + '</label></li>');
+        h.push('<li><label class="game-cursor"><input type="text" data-type="text" placeholder="1.9|A1: M" class="textfilter filter-msg game-cursor" value=' + (Infoboard.SavedFilter.includes("text") ? Infoboard.SavedTextFilter : "") + '></label></li>');
         h.push('</ul>');
         h.push('</div>');
 
@@ -178,7 +188,13 @@ let Infoboard = {
             msg: i18n('Boxes.Infobox.Messages.Welcome'),
         });
 
-        $('#BackgroundInfo').on('click', '#infoboxTone', function() {
+        Infoboard.MaxEntries = localStorage.getItem("EntryCount") || 0;
+        for (let i = 0; i < Infoboard.History.length; i++) {
+            const element = Infoboard.History[i];
+            Infoboard.PostMessage(element,false);
+        }
+
+        $('#BackgroundInfo').on('click', '#infoboxTone', function () {
 
             let disabled = $(this).hasClass('deactivated');
 
@@ -232,15 +248,31 @@ let Infoboard = {
     },
 
 
-    PostMessage: (bd) => {
+    PostMessage: (bd,add = true) => {
 
         if ($('#BackgroundInfo').length > 0) {
+            if(bd['class'] !== 'welcome' && add){
+                if(Infoboard.MaxEntries > 0 && Infoboard.History.length >= Infoboard.MaxEntries){
+                    Infoboard.History.shift();
+                }
+                Infoboard.History.push(bd);
+            }
+            if(bd['class'] === 'welcome' && Infoboard.History.length > 0) return;
+
             let status = $('input[data-type="' + bd['class'] + '"]').prop('checked'),
+                textfilter = $('input[data-type="text"]').val().split("|"),
                 msg = bd['msg'], img = bd['img'], type = bd['type'], tr = $('<tr />');
 
             // wenn nicht angezeigt werden soll, direkt verstecken
-            if (!status && bd.class !== 'welcome') {
+            if ((!status || !(textfilter.some(e => msg.toLowerCase().includes(e.toLowerCase())))) && bd.class !== 'welcome') {
                 tr.hide();
+            }else{
+                if(Infoboard.MaxEntries > 0 && $('#BackgroundInfoTable tbody tr').length >= Infoboard.MaxEntries){
+                    while(Infoboard.MaxEntries > 0 && $('#BackgroundInfoTable tbody tr').length >= Infoboard.MaxEntries){
+                        let trLast = $('#BackgroundInfoTable tbody tr:last-child')[0];
+                        trLast.parentNode.removeChild(trLast);
+                    }
+                }
             }
 
             if (img) {
@@ -269,26 +301,30 @@ let Infoboard = {
      *
      */
     FilterInput: () => {
-        $('#BackgroundInfo').on('change', '.filter-msg', function() {
+        $('#BackgroundInfo').on('change', '.filter-msg', function () {
             let active = [];
 
-            $('.filter-msg').each(function() {
-                if ($(this).is(':checked')) {
+            $('.filter-msg').each(function () {
+                if ($(this).is(':checked') || ($(this).data("type") === "text" && $(this).val() !== "")) {
                     active.push($(this).data('type'));
                     if (!Infoboard.SavedFilter.includes($(this).data('type')))
                         Infoboard.SavedFilter.push($(this).data('type'));
-                } else {
+                }
+                else {
                     if (Infoboard.SavedFilter.includes($(this).data('type')))
                         Infoboard.SavedFilter.splice(Infoboard.SavedFilter.indexOf($(this).data('type')), 1);
                 }
             });
 
             localStorage.setItem("infoboxSavedFilter", JSON.stringify(Infoboard.SavedFilter));
+            localStorage.setItem("infoboxTextFilter", $('input[data-type="text"]').val());
 
-            $('#BackgroundInfoTable tbody tr').each(function() {
-                let tr = $(this), type = tr.attr('class');
+            $('#BackgroundInfoTable tbody tr').each(function () {
+                let tr = $(this),
+                    textfilter = $('input[data-type="text"]').val().split("|"),
+                    type = tr.attr('class');
 
-                if (active.some(e => type.startsWith(e)) || tr.hasClass('welcome')) {
+                if ((active.some(e => type.startsWith(e)) && textfilter.some(e => $(tr.children()[2]).html().toLowerCase().includes(e.toLowerCase()))) || tr.hasClass('welcome')) {
                     tr.show();
                 } else {
                     tr.hide();
@@ -303,8 +339,9 @@ let Infoboard = {
      *
      */
     ResetBox: () => {
-        $('#BackgroundInfo').on('click', '.btn-reset-box', function() {
+        $('#BackgroundInfo').on('click', '.btn-reset-box', function () {
             $('#BackgroundInfoTable tbody').html('');
+            Infoboard.History = [];
         });
     }
 };
@@ -433,8 +470,8 @@ let Info = {
      */
     GuildBattlegroundService_getProvinces: (d) => {
 
-    	GildFights.PrepareColors();
-        
+        GildFights.PrepareColors();
+
         let data = d[0];
 
         let bP = GildFights.MapData['battlegroundParticipants'],
@@ -462,12 +499,12 @@ let Info = {
                 type: i18n('Boxes.Infobox.FilterGildFights'),
                 msg: HTML.i18nReplacer(
                     i18n('Boxes.Infobox.Messages.GildFightOccupied'), {
-                        provinceName: prov['name'],
-                        attackerColor: tc,
-                        attackerShadow: ts,
-                        attackerName: p['clan']['name'],
-                        untilOccupied: moment.unix(data['lockedUntil']).format('HH:mm:ss')
-                    }),
+                    provinceName: prov['name'],
+                    attackerColor: tc,
+                    attackerShadow: ts,
+                    attackerName: p['clan']['name'],
+                    untilOccupied: moment.unix(data['lockedUntil']).format('HH:mm:ss')
+                }),
                 img: 'gbg-lock'
             };
         }
@@ -497,14 +534,14 @@ let Info = {
             if (color) {
                 let tc = colors['highlight'], sc = color['highlight'],
                     ts = colors['shadow'], ss = color['shadow'];
-    
-                t += '<span style="color:' + tc + ';text-shadow: 0 1px 1px ' + ts + '">' + p['clan']['name'] + '</span> ⚔️ <span style="color:' + sc + ';text-shadow: 0 1px 1px ' + ss + '">' + prov['name'] + '</span> (<strong>' + d['progress'] + '</strong>/<strong>' + d['maxProgress'] + '</strong>)<br>';    
+
+                t += '<span style="color:' + tc + ';text-shadow: 0 1px 1px ' + ts + '">' + p['clan']['name'] + '</span> ⚔️ <span style="color:' + sc + ';text-shadow: 0 1px 1px ' + ss + '">' + prov['name'] + '</span> (<strong>' + d['progress'] + '</strong>/<strong>' + d['maxProgress'] + '</strong>)<br>';
             } else {
                 let tc = colors['highlight'],
                     ts = colors['shadow'];
 
-                t += '<span style="color:' + tc + ';text-shadow: 0 1px 1px ' + ts + '">' + p['clan']['name'] + '</span> ⚔️ ' + prov['name'] + ' (<strong>' + d['progress'] + '</strong>/<strong>' + d['maxProgress'] + '</strong>)<br>';    
-            
+                t += '<span style="color:' + tc + ';text-shadow: 0 1px 1px ' + ts + '">' + p['clan']['name'] + '</span> ⚔️ ' + prov['name'] + ' (<strong>' + d['progress'] + '</strong>/<strong>' + d['maxProgress'] + '</strong>)<br>';
+
             }
             if (image) {
                 image = 'gbg-undefined';
@@ -537,19 +574,19 @@ let Info = {
     OtherPlayerService_newEventgreat_building_contribution: (d) => {
 
         let newFP = Info.ReturnFPPoints;
-        if ( d['rank'] >= 6 ){ newFP = 0; }
+        if (d['rank'] >= 6) { newFP = 0; }
 
         let data = {
             class: 'level',
             type: 'Level-Up',
             msg: HTML.i18nReplacer(
                 i18n('Boxes.Infobox.Messages.LevelUp'), {
-                    player: d['other_player']['name'],
-                    building: d['great_building_name'],
-                    level: d['level'],
-                    rank: d['rank'],
-                    fps: newFP
-                }
+                player: d['other_player']['name'],
+                building: d['great_building_name'],
+                level: d['level'],
+                rank: d['rank'],
+                fps: newFP
+            }
             )
         };
 
@@ -557,7 +594,7 @@ let Info = {
         // so store the data and post the message from that handler (using the stored data)
         // ... but only if the rank is 5 and higher (1-5), otherwise, there is no reward
         // (and BlueprintService.newReward is not triggered)
-        if ( d['rank'] < 6 && Info.ReturnFPPoints == -1 ){
+        if (d['rank'] < 6 && Info.ReturnFPPoints == -1) {
             Info.ReturnFPMessageData = d;
             return undefined;
         }
@@ -582,12 +619,12 @@ let Info = {
             type: i18n('Boxes.Infobox.FilterTrade'),
             msg: HTML.i18nReplacer(
                 i18n('Boxes.Infobox.Messages.Trade'), {
-                    'player': d['other_player']['name'],
-                    'offer': GoodsData[d['offer']['good_id']]['name'],
-                    'offerValue': d['offer']['value'],
-                    'need': GoodsData[d['need']['good_id']]['name'],
-                    'needValue': d['need']['value']
-                }
+                'player': d['other_player']['name'],
+                'offer': GoodsData[d['offer']['good_id']]['name'],
+                'offerValue': d['offer']['value'],
+                'need': GoodsData[d['need']['good_id']]['name'],
+                'needValue': d['need']['value']
+            }
             )
         }
     },
@@ -611,9 +648,9 @@ let Info = {
             type: 'GEX',
             msg: HTML.i18nReplacer(
                 i18n('Boxes.Infobox.Messages.GEX'), {
-                    'player': d['player']['name'],
-                    'points': HTML.Format(d['expeditionPoints'])
-                }
+                'player': d['player']['name'],
+                'points': HTML.Format(d['expeditionPoints'])
+            }
             )
         };
     }
