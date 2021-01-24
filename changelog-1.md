@@ -1,5 +1,57 @@
 ## Changelog - Extension
 
+##### 2.5.5.1
+
+**Bugfix**
+- Gildengefecht Box:
+    - [#1779](https://github.com/dsiekiera/foe-helfer-extension/issues/1779) mit der Exportfunktion der Übersicht kam ein er kleiner Bug der den Unterschied zwischen den Schnappschüssen nicht mehr anzeigte
+
+---
+
+##### 2.5.5.0
+
+**Update**
+- Kostenrechner:
+    - Tabellenüberschriften teilweise durch Icons getauscht, die Übersetzungen sind in manchen Sprachen viel zu lang
+
+- Eigenanteilsrechner:
+    - [#1507](https://github.com/dsiekiera/foe-helfer-extension/issues/1507) Tabellenüberschriften teilweise durch Icons getauscht, die Übersetzungen sind in manchen Sprachen viel zu lang
+
+- Gildengefecht Box:
+    - Tabellenüberschriften teilweise durch Icons getauscht, die Übersetzungen sind in manchen Sprachen viel zu lang
+
+**Bugfix**
+- Extension:
+    - [#1770](https://github.com/dsiekiera/foe-helfer-extension/issues/1770) auf der Beta wurden die Spieler-Avatare nicht korrekt geladen, das haben wir vorsorglich bereits behoben
+
+---
+
+##### 2.5.4.4
+**Neu**
+- Handelsblocker:
+    - Wenn gewünscht, legt sich eine kleine Box in der Karte der Kontinente über den "Verhandeln"-Button um diesen nicht ausversehen zu drücken
+
+**Update**
+- Extension:
+    - moderneres Design für die Boxen
+    - neue modernere Buttons für die Boxen integriert
+    - diverse Übersetzungen von euch integriert
+
+- FP-Collector:
+    - Grafiken ergänzt (aktuelle/kommende Events)
+
+- Kostenrechner:
+    - Einstellungsbutton in der Box hinzugefügt, Werte der Archeförderung lassen sich nun einstellen
+
+- Eigenanteilsrechner:
+    - Einstellungsbutton in der Box hinzugefügt, Werte der Archeförderung lassen sich nun einstellen
+    
+
+**Bugfix**
+- Forschungskosten:
+    - [#1754](https://github.com/dsiekiera/foe-helfer-extension/issues/1754) Es wurden keine Werte mehr angezeigt
+
+---
 
 ##### 2.5.4.3
 
