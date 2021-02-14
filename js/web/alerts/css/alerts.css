@@ -13,14 +13,17 @@
     width: 650px;
 }
 
-#Alerts #AlertsBody { min-height: 160px; }
+#Alerts #AlertsBody .tabs, #Alerts #AlertsBody #alerts-tab-list {
+    height: 100%;
+}
 
 #Alerts #AlertsBody .scrollable{
-    max-height: 550px;
-    min-height: 160px;
+    height: 350px;
+    height: calc(100% - 40px);
     overflow: hidden;
     overflow-y: auto;
     margin: 2px 0 4px 0;
+    border-bottom: 1px solid var(--black-50);
 }
 
 #Alerts #AlertsBody .content {
@@ -190,15 +193,12 @@ div.alert-popup #alert-expires,
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    padding: 0.2rem 1rem;
     font-size: 0.8rem;
     line-height: 1.5;
     background: rgb(183,112,55);
     background: -moz-linear-gradient(top, rgb(183,112,55) 0%, rgb(176,96,38) 1%, rgb(145,72,30) 30%, rgb(130,62,24) 99%, rgb(176,104,50) 100%);
     background: -webkit-linear-gradient(top, rgb(183,112,55) 0%,rgb(176,96,38) 1%,rgb(145,72,30) 30%,rgb(130,62,24) 99%,rgb(176,104,50) 100%);
     background: linear-gradient(to bottom, rgb(183,112,55) 0%,rgb(176,96,38) 1%,rgb(145,72,30) 30%,rgb(130,62,24) 99%,rgb(176,104,50) 100%);
-    border: #000 1px solid;
-    border-radius: 4px;
     color: var(--text-normal);
     cursor: url(https://foede.innogamescdn.com/assets/shared/cursors/cursor_default.cur), auto;
     transition: color .15s ease-in-out,background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
@@ -221,6 +221,43 @@ div.alert-popup #alert-expires,
     text-overflow: ellipsis;
     white-space: nowrap;
 
+}
+
+input.hidden {
+    display: none;
+}
+
+#Alerts .icon-repeat {
+    background-image: url('../../x_img/repeat.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 14px;
+    height: 14px;
+    display: block;
+}
+
+#Alerts .btn-edit {
+    background-image: url('../../../../css/images/hud/edit.png'), var(--background-btn);
+    background-size: 13px 13px, cover;
+    background-repeat: no-repeat, repeat;
+    background-position: center;
+    width: 18px;
+}
+
+#Alerts .btn-edit:hover {
+    background-image: url('../../../../css/images/hud/edit.png'), var(--background-btn-active);
+}
+
+#Alerts .btn-delete {
+    background-image: url('../../x_img/trash.svg'), var(--background-btn-red);
+    background-size: 13px 13px, cover;
+    background-repeat: no-repeat, repeat;
+    background-position: center;
+    width: 18px;
+}
+
+#Alerts .btn-delete:hover {
+    background-image: url('../../x_img/trash.svg'), var(--background-btn-red-active);
 }
 
 /* Preferences */
@@ -256,4 +293,9 @@ div.alert-popup #alert-expires,
 }
 #Alerts #alerts-preferences .item .item-row .value {
     width: 34%;
+}
+
+/* hide tabs */
+#Alerts #AlertsBody .tabs ul {
+    display: none;
 }

@@ -17,7 +17,7 @@
 	position: absolute;
 	right: 0;
 	z-index: 750;
-	width: 50px;
+	width: 43px;
 	top: 60px;
 
 	font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
@@ -27,15 +27,15 @@
 
 #bonus-hud .hud-btn {
 	left: 5px;
-	width: 43px;
-	height: 43px;
+	width: 37px;
+	height: 37px;
 	background-image: none;
 	background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.3)), url('../../../../css/images/hud/box-bg.png') 0 0 no-repeat;
 	border-radius: 50% 0 0 50%;
 	border: 2px solid var(--hud-border-success);
 	border-right: none;
 	margin: 2px 0;
-	box-shadow: 1px -1px 1px var(--50-black);
+	box-shadow: 1px -1px 1px var(--black-50);
 }
 
 #bonus-hud .hud-btn.hud-btn-red {
@@ -51,9 +51,9 @@
 	background-size: contain;
 	background-position: center center;
 	background-repeat: no-repeat;
-	width: 35px;
-	height: 35px;
-	left: 7px;
+	width: 29px;
+	height: 29px;
+	left: 6px;
 	top: 3px;
 }
 
@@ -69,7 +69,7 @@
 	border-radius: 50%;
 	line-height: 16px;
 	text-align: center;
-	box-shadow: 0 1px 1px 1px var(--50-black);
+	box-shadow: 0 1px 1px 1px var(--black-50);
 	text-shadow: 0 1px 1px var(--black);
 	font-weight: bold;
 }
