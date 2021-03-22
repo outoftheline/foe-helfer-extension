@@ -1,5 +1,65 @@
 ## Changelog - Extension
 
+##### 2.5.6.3
+
+**Update**
+- Investitionsübersicht:
+    - [#1871](https://github.com/dsiekiera/foe-helfer-extension/issues/1871) Es werden keine Daten mehr an foe-rechner.de gesendet
+
+- Forschungskostenrechner:
+    - [#1897](https://github.com/dsiekiera/foe-helfer-extension/issues/1897) Ab diesem Update wird das Zeitalter Venus korrekt erkannt
+
+- Gildengefechte:
+    - Wir haben die Ansicht der Gildengefechte-Box umgeschrieben, für die Übersichtlichkeit
+
+- Moppelassistent:
+    - [#1912](https://github.com/dsiekiera/foe-helfer-extension/issues/1912) Die Sortierung der Namen hat nicht richtig funktioniert, das klappt nun
+
+- LG Investitionen:
+    - Option für die Berücksichtigung von Güterproduktionen
+
+- Bonus Bar:
+	- [#1915](https://github.com/dsiekiera/foe-helfer-extension/issues/1915) Bonus Bar zeigt nun auch abgeschlossene Quests an
+
+**BugFix**
+- Extension:
+    - [#1892](https://github.com/dsiekiera/foe-helfer-extension/issues/1892) Ein doppeltes Anführungszeichen konnte ein Tooltip zerstören
+
+- Verhandlungsassistent:
+    - [#1879](https://github.com/dsiekiera/foe-helfer-extension/issues/1879) Manchmal wurden die anzahl der Züge nicht korrekt erkannt, das wurde behoben
+
+- Eigenanteilsrechner:
+    - [#1891](https://github.com/dsiekiera/foe-helfer-extension/issues/1891) Erledigter Eigenanteil wurde falsch berechnet, wenn gelöschter Spieler etwas eingezahlt hatte
+
+- Gebäude-Kits:
+    - [#1910](https://github.com/dsiekiera/foe-helfer-extension/issues/1910) Die Anzahl wird nun korrekt berechnet
+
+---
+
+##### 2.5.6.2
+
+**Update**
+- Produktionsübersicht:
+    - [#1668](https://github.com/dsiekiera/foe-helfer-extension/issues/1668) Angriff und Verteidigung wurden als neue Reiter eingefügt
+
+- Gildengefechte:
+    - verbesserte Ansicht wenn Provinz noch keinen Besitzer hat
+
+- Investitionen: 
+    - [#1853](https://github.com/dsiekiera/foe-helfer-extension/issues/1853) Investitionen können ignoriert - und Plätze nur "sicher" dargestellt werden
+
+**BugFix**
+- Menü:
+    - [#1861](https://github.com/dsiekiera/foe-helfer-extension/issues/1861) Durch einen case sensitive (Groß-Kleinschreibung) Fehler konnte das Alarmicon nicht verschoben werden, oder verschwand
+
+- Alerts:
+    - [#1848](https://github.com/dsiekiera/foe-helfer-extension/issues/1848) Firefox Bug: Alarm konnte nicht erstellt werden
+
+- Investitionen:
+    - [#1854](https://github.com/dsiekiera/foe-helfer-extension/issues/1854) Falsche Sortierung der Eintragszeit bei Investitionen korrigiert
+
+---
+
 ##### 2.5.6.1
 
 **Update**
@@ -30,7 +90,7 @@
 		- es muss nur der Browser offen sein, nicht das Spiel um die Benachrichtigungen zu erhalten
 
 
-- Gildengefechte Übersicht: _danke an [vegaz337](https://github.com/vegaz337) für die Vorlage_
+- Gildengefechte Übersicht:
 	- zur Box der Spielerfortschritte, ist nun eine neue Box (im Menü) gekommen, die alle Fortschritte der umkämpften Provinzen in Echtzeit darstellt
 	- ein zweiter Reiter zeigt in Echtzeit an, wann angrenzende Sektoren deiner Gilde, demnächst ihre Sperre verlieren
 	- durch den Klick auf den kleinen Map-Marker, rechts oben in der Box, erscheint eine MiniMap die sich in Echtzeit aktualisiert
