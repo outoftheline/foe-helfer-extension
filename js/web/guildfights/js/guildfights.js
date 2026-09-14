@@ -122,6 +122,7 @@ let GuildFights = {
 	GBGHistoryView: false,
 	GBGRoundGuilds: null,
 	LogDatePicker: null,
+	CounterIntervals: [],
 	curDateFilter: null,
 	curDateEndFilter: null,
 	curDetailViewFilter: null,
@@ -248,10 +249,15 @@ let GuildFights = {
 			FH.proxy.addWsHandler('GuildBattlegroundService', 'all', data => {
 				if (!data['responseData']?.[0]) return
 				let Pid = data.responseData[0].id || 0;
+				let target = GuildFights.MapData?.map?.provinces?.find(x => (x.id||0) === Pid);
+				if (!target) return;
+
 				for (let x in data.responseData[0]) {
-					if (!data.responseData[0].hasOwnProperty(x) || x === "id") continue;
-					GuildFights.MapData.map.provinces[Pid][x] = data.responseData[0][x];
+					if (!data.responseData[0].hasOwnProperty(x) || x === "id" || x === "signal") continue;
+					target[x] = data.responseData[0][x];
 				}
+
+				GuildFights.SetSignals();
 
 				if ($('#LiveGuildFighting').length > 0) {
 					GuildFights.RefreshTable(data['responseData'][0]);
@@ -267,8 +273,10 @@ let GuildFights = {
 
 
 	HandleSignals: async (data = null) => {
+		GuildFights.SetSignals(data);
+
 		if (!GuildFights.showGbgTargets) return;
-		
+
 		await GuildFights.GetAlerts();
 
 		$('#nextup td[id^="alert-"]').each(function () {
@@ -276,41 +284,10 @@ let GuildFights = {
 			$(this).html(GuildFights.GetAlertButton(id));
 		});
 
-		let provinces = GuildFights.MapData.map.provinces;
-
-		if (!data) {
-			for (let province of provinces) {
-				delete province.signal;
-			}
-
-			let ownSignals = GuildFights.MapData.battlegroundParticipants.find(x => x.clan.id === FH.Guild.ID)?.signals || [];
-
-			for (let entry of ownSignals) {
-				let province = provinces.find(x => (x.id||0) === (entry.provinceId||0));
-				if (!province || province.ownerId === GuildFights.MapData.currentParticipantId) continue;
-
-				province.signal = entry.signal;
-			}
-		}
-		else {
-			let provinceId = data.provinceId||0;
-			let province = provinces.find(x => (x.id||0) === provinceId);
-
-			if (province) {
-				if (data.signal === "focus" || data.signal === "ignore") {
-					if (province.ownerId !== GuildFights.MapData.currentParticipantId)
-						province.signal = data.signal;
-				}
-				else {
-					delete province.signal;
-				}
-			}
-		}
-
 		GuildFights.ShowFocusSignals();
 		GuildFights.UpdateMenuSignalTimer();
 
-		if (provinces.some(x => x.signal === "focus")) {
+		if (GuildFights.MapData?.map?.provinces?.some(x => x.signal === "focus")) {
 			if (!GuildFights.SignalsIntervalID)
 				GuildFights.SignalsIntervalID = setInterval(GuildFights.ShowFocusSignals, 1000);
 		}
@@ -321,8 +298,52 @@ let GuildFights = {
 	},
 
 
+	SetSignals: (data = null) => {
+		let provinces = GuildFights.MapData?.map?.provinces;
+		if (!provinces) return;
+
+		let own = GuildFights.MapData.battlegroundParticipants?.find(x => x.clan.id === FH.Guild.ID);
+		if (!own) return;
+
+		if (!Array.isArray(own.signals)) own.signals = [];
+		let signals = own.signals;
+
+		// apply signal changes
+		if (data && data.action !== "province_conquered") {
+			let provinceId = data.provinceId||0;
+			let idx = signals.findIndex(s => (s.provinceId||0) === provinceId);
+
+			if (data.signal === "focus" || data.signal === "ignore") {
+				if (idx === -1) signals.push({provinceId: provinceId, signal: data.signal});
+				else signals[idx].signal = data.signal;
+			}
+			else if (idx !== -1) {
+				signals.splice(idx, 1);
+			}
+		}
+
+		// remove signals from conquered provinces
+		for (let i = signals.length - 1; i >= 0; i--) {
+			let province = provinces.find(x => (x.id||0) === (signals[i].provinceId||0));
+			if (province && province.ownerId === GuildFights.MapData.currentParticipantId)
+				signals.splice(i, 1);
+		}
+
+		for (let province of provinces) {
+			if (province.signal !== undefined) province.signal = undefined;
+		}
+
+		for (let entry of signals) {
+			let province = provinces.find(x => (x.id||0) === (entry.provinceId||0));
+			if (province) province.signal = entry.signal;
+		}
+	},
+
+
 	ShowFocusSignals: () => {
-		let signalProvinces = (GuildFights.MapData?.map?.provinces || []).filter(x => x.signal === "focus");
+		let signalProvinces = (GuildFights.MapData?.map?.provinces || []).filter(x =>
+			x.signal === "focus" && x.ownerId !== GuildFights.MapData?.currentParticipantId
+		);
 
 		if (!signalProvinces.length || !GuildFights.showGbgTargets || FH.ActiveMap !== 'gg') {
 			$('#GBGTargets').remove();
@@ -347,7 +368,7 @@ let GuildFights = {
 
 		let activeSignals = new Set();
 
-		let sortedSignals = [...signalProvinces].sort((a, b) => {
+		let sortedSignals = signalProvinces.sort((a, b) => {
 			let lockedA = a.lockedUntil,
 				lockedB = b.lockedUntil;
 
@@ -442,8 +463,10 @@ let GuildFights = {
 
 			if (timeDiff < 0) {
 				$('#gildFight-Btn .hud-counter').text('').removeClass('hud-counter-red');
-				GuildFights.MapData.map.provinces[sortedSignals[0].id].signal = undefined;
-				GuildFights.MapData.map.provinces[sortedSignals[0].id].lockedUntil = undefined;
+				// sortedSignals[0] IS the province object - don't index by id,
+				// the first province of a map has no id (provinces[undefined]).
+				sortedSignals[0].signal = undefined;
+				sortedSignals[0].lockedUntil = undefined;
 			}
 		}
 		else if ($('#gildFight-Btn').length > 0 && menuSignals.length === 0)
@@ -1356,6 +1379,10 @@ let GuildFights = {
 			}
 		}
 
+		// Both builders below start one interval per row - drop the previous
+		// batch first, otherwise every rebuild stacks another ~60 live timers.
+		GuildFights.ClearCounterIntervals();
+
 		nextup = GuildFights.BuildNextUpTab();
 		progress = GuildFights.BuildProgressTab();
 		owned = GuildFights.BuildOwnedTab();
@@ -1569,6 +1596,8 @@ let GuildFights = {
 						GuildFights.UpdateCounter(countDownDate, intervalID, prov[x].id);
 					}, 1000);
 
+				GuildFights.CounterIntervals.push(intervalID);
+
 				
 				// look for connecting province timers
 				let connectionSecured = false;
@@ -1668,6 +1697,8 @@ let GuildFights = {
 				intervalID = setInterval(() => {
 					GuildFights.UpdateCounter(countDownDate, intervalID, province.id);
 				}, 1000);
+
+			GuildFights.CounterIntervals.push(intervalID);
 
 			let slotWarning = (province.usedBuildingSlots||0) < province.totalBuildingSlots && province.totalBuildingSlots === 2 ? 'bg-red': ((province.usedBuildingSlots||0) < province.totalBuildingSlots ? 'bg-yellow' : '')
 
@@ -1832,8 +1863,18 @@ let GuildFights = {
 	},
 
 
-	UpdateCounter: (countDownDate, intervalID, id) => {
-		let idSpan = $(`#counter-${id}`),
+	// The tab builders start one countdown interval per row. Rebuilding a tab
+	// throws the old rows away, but the intervals kept running against detached
+	// DOM (UpdateCounter's .text() on an empty jQuery set is a silent no-op, so
+	// they never hit their own clear path). Each rebuild leaked ~60 timers plus
+	// the moment/province objects their closures held. Tear them down first.
+	ClearCounterIntervals: () => {
+		for (let id of GuildFights.CounterIntervals) clearInterval(id);
+		GuildFights.CounterIntervals = [];
+	},
+
+
+	UpdateCounter: (countDownDate, intervalID, id) => {		let idSpan = $(`#counter-${id}`),
 			removeIt = false;
 
 		if (countDownDate.isValid()) {
@@ -1852,6 +1893,7 @@ let GuildFights = {
 
 		if (removeIt) {
 			clearInterval(intervalID);
+			GuildFights.CounterIntervals = GuildFights.CounterIntervals.filter(i => i !== intervalID);
 
 			idSpan.text('');
 			$(`#timer-${id}`).find('.time-static').html(`<strong class="text-success">!!</strong>`); // @ToDo: translate
