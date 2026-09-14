@@ -1906,7 +1906,12 @@ let Stats = {
 	 */
 	buildGBGGuildsChart: async () => {
 		let entries = await GuildFights.db.guildHistory.where('gbground').equals(GuildFights.CurrentGBGRound).sortBy('time');
-		let guildNames = [...new Set(entries.flatMap(e => e.guilds.map(g => g.name)))];
+
+		let guilds = new Map();
+		for (let e of entries) {
+			for (let g of e.guilds) 
+				guilds.set(g.id, g.name);
+		}
 
 		let guildColors = {};
 		if (GuildFights.SortedColors && GuildFights.MapData?.battlegroundParticipants) {
@@ -1918,8 +1923,7 @@ let Stats = {
 			}
 		}
 
-		let datasets = guildNames.map(name => {
-			let guildId = entries.flatMap(e => e.guilds).find(x => x.name === name)?.id;
+		let datasets = [...guilds.entries()].map(([guildId, name]) => {
 			let color = guildColors[guildId] ?? null;
 
 			return {
@@ -1930,7 +1934,7 @@ let Stats = {
 				borderWidth: 1.5,
 				spanGaps: true,
 				data: entries.map(snapshot => {
-					let guild = snapshot.guilds.find(x => x.name === name);
+					let guild = snapshot.guilds.find(x => x.id === guildId);
 					if (!guild) return null;
 					return {
 						x: snapshot.time * 1000,
