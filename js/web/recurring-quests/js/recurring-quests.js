@@ -58,9 +58,8 @@ let Recurring = {
         if ($('#RecurringQuestsBox').length < 1) return;
         
         if ((Recurring.data?.filter?.length || 0) + (Recurring.data?.filter2?.length || 0) === 0) {
-            $('#RecurringQuestsBox').fadeOut('500', function() {
-                $(this).remove();
-            });
+            h = `<div class="important-overlay"><b class="text-danger">${FH.t('Boxes.RecurringQuests.NoQuests')}</b></div>`;
+            $('#RecurringQuestsBoxBody').html(h);
         }
         else 
             Recurring.BuildBox();  

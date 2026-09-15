@@ -1221,6 +1221,7 @@
   "Boxes.ReconstructionMap.LoadPlan": "Aus dem Stadtplaner laden",
   "Boxes.ReconstructionMap.Title": "Karte",
   "Boxes.RecurringQuests.AND": "UND",
+  "Boxes.RecurringQuests.NoQuests": "Keine Quests gefunden. Bitte finde die Quests dieses Zeitalters im Spiel!",
   "Boxes.RecurringQuests.OR": "ODER",
   "Boxes.RecurringQuests.showCounter": "Zeige Zähler für offene Quests im Menu",
   "Boxes.RecurringQuests.Table.Quest": "Quest Name",

@@ -1225,6 +1225,7 @@
   "Boxes.ReconstructionMap.LoadPlan": "Load from City Planner",
   "Boxes.ReconstructionMap.Title": "Map",
   "Boxes.RecurringQuests.AND": "AND",
+  "Boxes.RecurringQuests.NoQuests": "No quests found yet. Please reach the recurring quests of this era first!",
   "Boxes.RecurringQuests.OR": "OR",
   "Boxes.RecurringQuests.showCounter": "Display counter for open quests in menu",
   "Boxes.RecurringQuests.Table.Quest": "Quest name",

@@ -1101,7 +1101,7 @@ Potions */
 
 
 
-.lg-not-possible {
+.lg-not-possible, .important-overlay {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -1113,7 +1113,7 @@ Potions */
 	transition: 0.3s all linear;
 }
 
-.lg-not-possible::after {
+.lg-not-possible::after, .important-overlay > b {
 	content: attr(data-text);
 	position: absolute;
 	top: 50%;
@@ -1163,7 +1163,7 @@ hammerBar */
     align-items: stretch;
 }
 
-#hammerBar .barItem {
+#hammerBar div.barItem, #hammerBar span.barItem {
 	background: var(--game-bg-dark);
 	border: 1px solid var(--game-border-bar);
 	color: var(--game-text-light);
@@ -1172,10 +1172,20 @@ hammerBar */
     align-items: center;
 	padding: 0 4px;
 	height: inherit;
+	gap: 2px;
+}
+#hammerBar img.barItem {
+	height: inherit;
+}
+#hammerBar .barItem img {
+	max-height: 25px;
+}
+#hammerBar .barItem.active {
+	color: var(--golden);
 }
 
-#hammerBar .fp-storage,
-#hammerBar .buyable-fp {
+#hammerBar div.fp-storage,
+#hammerBar div.buyable-fp {
 	padding: 0 4px 0 26px;
 }
 
@@ -1208,7 +1218,10 @@ hammerBar */
 #hammerBar.guild_raids {
 	margin-left: 461px;
 }
-#hammerBar.gg, #hammerBar.guild_raids .fpContainer, #hammerBar.gex .buyable-fp, #hammerBar.reconstruction .fpContainer, #hammerBar.main .fpbar {
+#hammerBar.cultural_outpost {
+	margin-left: 311px;
+}
+#hammerBar.gg, #hammerBar.guild_raids .fpContainer, #hammerBar.gex .buyable-fp, #hammerBar.reconstruction .fpContainer, #hammerBar.main .fpbar, #hammerBar.cultural_outpost .fpContainer, #hammerBar.cultural_outpost .fpbar {
 	display: none;
 }
 #hammerBar.gex {
